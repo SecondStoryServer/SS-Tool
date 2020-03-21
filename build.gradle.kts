@@ -9,11 +9,12 @@ group = "me.syari.ss.gun"
 repositories {
     mavenCentral()
     maven ("https://papermc.io/repo/repository/maven-public/")
+    maven("https://raw.github.com/sya-ri/SS-Core/tree/master/build/repo/me/syari/ss/core/SS-Core")
 }
 
 dependencies {
-    implementation("me.syari.ss:core")
     implementation("com.destroystokyo.paper:paper-api:1.15.2-R0.1-SNAPSHOT")
+    implementation("me.syari.ss.core:SS-Core:LATEST")
 }
 
 tasks.withType<KotlinCompile> {
