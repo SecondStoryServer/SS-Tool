@@ -1,5 +1,5 @@
 name: SS-Gun
-version: "1.0"
+version: @version@
 api-version: "1.15"
 main: me.syari.ss.gun.Main
 author: sya_ri
