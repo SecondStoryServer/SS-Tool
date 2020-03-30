@@ -1,0 +1,12 @@
+# ------------[ Ammo ]------------
+# File: Ammo/<item_id>.yml
+info:
+  type: <String:STONE> # Material
+  name: <String:item_id> # アイテム名
+  lore: <StringList:[]> # 説明文
+
+# --- 設定値 --- #
+# 「:」以降がデフォルト値で省略可能です
+#
+# String: # 文字列
+# StringList: # 文字列リスト
