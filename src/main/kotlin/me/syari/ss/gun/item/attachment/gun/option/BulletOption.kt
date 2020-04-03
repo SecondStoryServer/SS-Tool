@@ -6,6 +6,7 @@ import me.syari.ss.core.particle.CustomParticleList
 import me.syari.ss.core.scheduler.CustomScheduler.runLater
 import me.syari.ss.core.scheduler.CustomScheduler.runRepeatTimes
 import me.syari.ss.core.scheduler.CustomScheduler.runTimer
+import me.syari.ss.core.scheduler.CustomTask
 import me.syari.ss.gun.Main.Companion.gunPlugin
 import me.syari.ss.gun.item.attachment.gun.option.value.SneakOption
 import org.bukkit.Location
@@ -30,13 +31,13 @@ data class BulletOption(
     val remove: Int,
     val particleList: CustomParticleList?
 ) {
-    fun shoot(player: Player, isSneak: Boolean, isScope: Boolean){
-        data class RandomSpread(private val spread: Float){
+    fun shoot(player: Player, isSneak: Boolean, isScope: Boolean, hitEvent: (LivingEntity, Entity, Boolean) -> Unit) {
+        data class RandomSpread(private val spread: Float) {
             fun generate() = (Random.nextFloat() - Random.nextFloat()) * spread
         }
 
         fun getSpread(isSneak: Boolean, isScope: Boolean): RandomSpread {
-            return RandomSpread(spread.get(isSneak).toFloat() * (if(isScope) scopeSpread else 1F) * 0.1F)
+            return RandomSpread(spread.get(isSneak).toFloat() * (if (isScope) scopeSpread else 1F) * 0.1F)
         }
 
         fun getProjectileLocation(): Location {
@@ -55,32 +56,47 @@ data class BulletOption(
 
         runRepeatTimes(gunPlugin, burstDelay.toLong(), burstAmount) {
             val direction = Vector(x + spread.generate(), y + spread.generate(), z + spread.generate())
-            val entity = type.spawn(projectileLocation, player)
+            val bullet = type.spawn(projectileLocation, player)
             var speed = bulletVector.speed
             val up = bulletVector.up
             val gravity = bulletVector.gravity
-            entity.velocity = direction
-                .clone().multiply(speed)
-            if(up != 0F || gravity != 0F){
+            bullet.velocity = direction.clone().multiply(speed)
+            val taskList = mutableSetOf<CustomTask>()
+            runLater(gunPlugin, remove.toLong()) {
+                bullet.remove()
+                taskList.forEach { it.cancel() }
+            }?.let { taskList.add(it) }
+            if (up != 0F || gravity != 0F) {
                 runTimer(gunPlugin, 1) {
-                    if (entity.isValid) {
-                        cancel()
-                    }
                     speed += up
-                    entity.velocity = direction
+                    bullet.velocity = direction
                         .add(Vector(0F, -gravity, 0F))
                         .clone().multiply(speed)
+                }?.let { taskList.add(it) }
+            }
+            if (particleList != null) {
+                var period = particleList.getRequireTime()
+                if (period < 1L) period = 1
+                runTimer(gunPlugin, period) {
+                    particleList.spawn(bullet)
+                }?.let { taskList.add(it) }
+            }
+            runTimer(gunPlugin, 1) {
+                if (bullet.isOnGround) {
+                    bullet.remove()
                 }
-            }
-            runTimer(gunPlugin, 5) {
-                if (entity.isValid) {
-                    cancel()
+                bullet.getNearbyEntities(0.7, 1.0, 0.7)
+                    .filterIsInstance<LivingEntity>()
+                    .firstOrNull()?.let { victim ->
+                        val isHeadShot = victim.eyeLocation.y - bullet.location.y in -0.5..0.5
+                        hitEvent.invoke(victim, bullet, isHeadShot)
+                        bullet.remove()
+                    }
+                if (bullet.isValid) {
+                    taskList.forEach { it.cancel() }
+                    return@runTimer
                 }
-                particleList?.spawn(entity)
-            }
-            runLater(gunPlugin, remove.toLong()) {
-                entity.remove()
-            }
+            }?.let { taskList.add(it) }
         }
     }
 

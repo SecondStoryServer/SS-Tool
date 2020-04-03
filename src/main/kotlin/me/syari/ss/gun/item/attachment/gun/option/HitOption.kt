@@ -4,6 +4,8 @@ import me.syari.ss.core.config.CustomConfig
 import me.syari.ss.core.config.dataType.ConfigDataType
 import me.syari.ss.core.particle.CustomParticleList
 import me.syari.ss.core.sound.CustomSoundList
+import org.bukkit.entity.LivingEntity
+import org.bukkit.entity.Player
 import org.bukkit.potion.PotionEffect
 
 sealed class HitOption(
@@ -12,6 +14,15 @@ sealed class HitOption(
     val sound: Sound,
     val potion: Potion
 ) {
+    fun runEvent(shooter: Player, victim: LivingEntity) {
+        particle.shooter?.spawn(shooter)
+        particle.victim?.spawn(victim)
+        sound.shooter?.play(shooter)
+        sound.victim?.play(victim)
+        potion.shooter?.forEach { it.apply(shooter) }
+        potion.victim?.forEach { it.apply(victim) }
+    }
+
     class Base(
         damage: Float,
         particle: Particle,

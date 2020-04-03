@@ -4,10 +4,6 @@ import me.syari.ss.core.config.CustomConfig
 import me.syari.ss.core.config.dataType.ConfigDataType
 import me.syari.ss.core.item.CustomItemStack
 import me.syari.ss.core.message.Message.action
-import me.syari.ss.core.scheduler.CustomScheduler.runLater
-import me.syari.ss.core.scheduler.CustomScheduler.runRepeatTimes
-import me.syari.ss.core.scheduler.CustomScheduler.runTimer
-import me.syari.ss.gun.Main.Companion.gunPlugin
 import me.syari.ss.gun.item.attachment.base.Attachment
 import me.syari.ss.gun.item.attachment.base.AttachmentLoader
 import me.syari.ss.gun.item.attachment.gun.option.*
@@ -20,11 +16,8 @@ import me.syari.ss.gun.item.attachment.gun.option.RecoilOption.Companion.getReco
 import me.syari.ss.gun.item.attachment.gun.option.ReloadOption.Companion.getReloadOption
 import me.syari.ss.gun.item.attachment.gun.option.ScopeOption.Companion.getScopeOption
 import me.syari.ss.gun.item.attachment.gun.option.ShotOption.Companion.getShotOption
-import org.bukkit.Location
 import org.bukkit.entity.Player
-import org.bukkit.util.Vector
-import kotlin.math.cos
-import kotlin.math.sin
+import kotlin.random.Random
 
 class GunAttachment(
     override val wearOut: Int,
@@ -38,12 +31,24 @@ class GunAttachment(
     val recoilOption: RecoilOption,
     val scopeOption: ScopeOption
 ) : Attachment {
-    fun shoot(player: Player, item: CustomItemStack){
+    fun shoot(player: Player, item: CustomItemStack) {
         val isScope = ScopeOption.isUseScope(player)
         val isSneak = player.isSneaking
-        if(!shotOption.canShoot(player, isScope, item)) return
-        if(ammoOption.isTimingShot && !ammoOption.canConsume(player)) return player.action(Message.NoAmmo.message)
-        bulletOption.shoot(player, isSneak, isScope)
+        if (!shotOption.canShoot(player, isScope, item)) return
+        if (ammoOption.isTimingShot && !ammoOption.canConsume(player)) return player.action(Message.NoAmmo.message)
+        bulletOption.shoot(player, isSneak, isScope) { victim, bullet, isHeadShot ->
+            var damage = hitOptionBase.damage
+            hitOptionBase.runEvent(player, victim)
+            if (isHeadShot) {
+                hitOptionHeadShot.runEvent(player, victim)
+                damage *= hitOptionHeadShot.damage
+            }
+            if (Random.nextFloat() < hitOptionCritical.chance) {
+                damage *= hitOptionCritical.damage
+                hitOptionCritical.runEvent(player, victim)
+            }
+            victim.damage(damage.toDouble(), bullet)
+        }
         shotOption.shoot(player, item)
         ammoOption.consume(player)
         recoilOption.recoil(player)
