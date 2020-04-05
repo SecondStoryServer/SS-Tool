@@ -4,6 +4,7 @@ import me.syari.ss.core.config.CustomConfig
 import me.syari.ss.core.config.dataType.ConfigDataType
 import me.syari.ss.core.item.CustomItemStack
 import me.syari.ss.core.message.Message.action
+import me.syari.ss.gun.Main.Companion.gunPlugin
 import me.syari.ss.gun.item.attachment.base.Attachment
 import me.syari.ss.gun.item.attachment.base.AttachmentLoader
 import me.syari.ss.gun.item.attachment.gun.option.*
@@ -17,6 +18,7 @@ import me.syari.ss.gun.item.attachment.gun.option.ReloadOption.Companion.getRelo
 import me.syari.ss.gun.item.attachment.gun.option.ScopeOption.Companion.getScopeOption
 import me.syari.ss.gun.item.attachment.gun.option.ShotOption.Companion.getShotOption
 import org.bukkit.entity.Player
+import org.bukkit.persistence.PersistentDataType
 import kotlin.random.Random
 
 class GunAttachment(
@@ -65,10 +67,15 @@ class GunAttachment(
         shotOption.shoot(player, item)
         ammoOption.consume(player)
         recoilOption.recoil(player)
+        updateName(item)
         return true
     }
 
     fun reload(player: Player, item: CustomItemStack) {
+        if (ammoOption.isTimingReload && !ammoOption.canConsume(player)) {
+            return player.action(Message.NoAmmo.message)
+        }
+        ammoOption.consume(player)
         reloadOption.reload(player, item)
     }
 
@@ -76,7 +83,29 @@ class GunAttachment(
         scopeOption.scope(player)
     }
 
+    enum class Cursor(val internalId: String) {
+        Right("right"),
+        Left("left")
+    }
+
+    fun getCursor(item: CustomItemStack): Cursor? {
+        val id = item.getPersistentData(gunPlugin)?.get(gunCursorPersistentKey, PersistentDataType.STRING)
+        return Cursor.values().firstOrNull { it.internalId == id }
+    }
+
+    fun setCursor(item: CustomItemStack, cursor: Cursor?) {
+        item.editPersistentData(gunPlugin) {
+            set(gunCursorPersistentKey, PersistentDataType.STRING, cursor?.internalId)
+        }
+    }
+
+    fun updateName(item: CustomItemStack) {
+
+    }
+
     companion object {
+        private const val gunCursorPersistentKey = "ss-gun-cursor"
+
         fun loadMessage(config: CustomConfig, section: String) {
             config.with {
                 var editNum = 0
@@ -119,7 +148,5 @@ class GunAttachment(
                 getScopeOption(config, "$section.scope")
             )
         }
-
-
     }
 }

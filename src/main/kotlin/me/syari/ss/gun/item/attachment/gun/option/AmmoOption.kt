@@ -15,7 +15,7 @@ data class AmmoOption(
 ) {
     val item by lazy { getItem(id) }
     val isTimingShot = timing == Timing.Shot
-    val isTimingReloaded = timing == Timing.Reloaded
+    val isTimingReload = timing == Timing.Reload
 
     private fun runEachAmmo(player: Player, run: (CustomItemStack) -> Unit){
         player.inventory.contents.forEach {
@@ -60,7 +60,7 @@ data class AmmoOption(
 
     enum class Timing(private val configValue: String) {
         Shot("shot"),
-        Reloaded("reload");
+        Reload("reload");
 
         companion object {
             fun fromString(value: String?): Timing? {

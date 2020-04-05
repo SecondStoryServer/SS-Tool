@@ -9,11 +9,12 @@ import org.bukkit.persistence.PersistentDataType
 
 class SSGunItem(val item: CustomItemStack, val gun: SSGun) {
     var durability: Int =
-        item.getPersistentData(gunPlugin)?.get("ss-gun-durability", PersistentDataType.INTEGER) ?: gun.maxDurability
+        item.getPersistentData(gunPlugin)?.get(gunDurabilityPersistentKey, PersistentDataType.INTEGER)
+            ?: gun.maxDurability
 
     fun updateDurability() {
         item.editPersistentData(gunPlugin) {
-            set("ss-gun-durability", PersistentDataType.INTEGER, durability)
+            set(gunDurabilityPersistentKey, PersistentDataType.INTEGER, durability)
         }
         item.durability = (item.type.maxDurability * durability) / gun.maxDurability
     }
@@ -34,5 +35,7 @@ class SSGunItem(val item: CustomItemStack, val gun: SSGun) {
         fun get(id: String?): SSGunItem? {
             return SSGun.get(id)?.create()
         }
+
+        private const val gunDurabilityPersistentKey = "ss-gun-durability"
     }
 }

@@ -13,29 +13,18 @@ data class ScopeOption(
     val nightVision: Boolean
 ){
     fun scope(player: Player){
-        if(amount == 0) return
-        val scope = isUseScope(player)
-        if(scope){
-            player.removePotionEffect(PotionEffectType.SPEED)
-            player.removeMetadata(zoomMetaDataKey, gunPlugin)
-            if(player.hasMetadata(lastSpeedMetaDataKey)){
-                val speedEffect = player.getMetadata(lastSpeedMetaDataKey)[0].value() as? PotionEffect
-                speedEffect?.apply(player)
-                player.removeMetadata(lastSpeedMetaDataKey, gunPlugin)
-            }
-            if((player.getMetadata(nightVisionMetaDataKey)[0]).asBoolean()){
-                player.removePotionEffect(PotionEffectType.NIGHT_VISION)
-                player.removeMetadata(nightVisionMetaDataKey, gunPlugin)
-            }
+        if (amount == 0) return
+        if (isUseScope(player)) {
+            cancelScope(player)
         } else {
             val speedEffect = player.getPotionEffect(PotionEffectType.SPEED)
-            if(speedEffect != null){
+            if (speedEffect != null) {
                 player.setMetadata(lastSpeedMetaDataKey, FixedMetadataValue(gunPlugin, speedEffect))
                 player.removePotionEffect(PotionEffectType.SPEED)
             }
             player.setMetadata(zoomMetaDataKey, FixedMetadataValue(gunPlugin, true))
             PotionEffectType.SPEED.createEffect(2400, -amount).apply(player)
-            if(nightVision && !player.hasPotionEffect(PotionEffectType.NIGHT_VISION)){
+            if (nightVision && !player.hasPotionEffect(PotionEffectType.NIGHT_VISION)) {
                 player.setMetadata(nightVisionMetaDataKey, FixedMetadataValue(gunPlugin, true))
                 PotionEffectType.NIGHT_VISION.createEffect(2400, -1)
             }
@@ -62,6 +51,20 @@ data class ScopeOption(
 
         fun isUseScope(player: Player): Boolean {
             return player.hasMetadata(zoomMetaDataKey) && (player.getMetadata(zoomMetaDataKey)[0]).asBoolean()
+        }
+
+        fun cancelScope(player: Player) {
+            player.removePotionEffect(PotionEffectType.SPEED)
+            player.removeMetadata(zoomMetaDataKey, gunPlugin)
+            if (player.hasMetadata(lastSpeedMetaDataKey)) {
+                val speedEffect = player.getMetadata(lastSpeedMetaDataKey)[0].value() as? PotionEffect
+                speedEffect?.apply(player)
+                player.removeMetadata(lastSpeedMetaDataKey, gunPlugin)
+            }
+            if ((player.getMetadata(nightVisionMetaDataKey)[0]).asBoolean()) {
+                player.removePotionEffect(PotionEffectType.NIGHT_VISION)
+                player.removeMetadata(nightVisionMetaDataKey, gunPlugin)
+            }
         }
     }
 }
