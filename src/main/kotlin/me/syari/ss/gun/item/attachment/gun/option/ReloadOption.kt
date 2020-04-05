@@ -10,6 +10,7 @@ import me.syari.ss.core.scheduler.CustomScheduler.runRepeatTimes
 import me.syari.ss.core.scheduler.CustomTask
 import me.syari.ss.core.sound.CustomSoundList
 import me.syari.ss.gun.Main.Companion.gunPlugin
+import me.syari.ss.gun.item.attachment.gun.GunAttachment
 import org.bukkit.entity.Player
 import org.bukkit.persistence.PersistentDataType
 
@@ -21,14 +22,14 @@ data class ReloadOption(
     val bar: Bar,
     val sound: Sound
 ) {
-    fun reload(player: Player, item: CustomItemStack) {
-        val lastBullet = getBullet(item)
+    fun reload(player: Player, cursor: GunAttachment.Cursor, item: CustomItemStack) {
+        val lastBullet = getBullet(item, cursor)
         val maxBullet = maxBullet
         if (lastBullet < maxBullet) {
             fun endReload() {
                 var bullet = lastBullet + onceBullet
                 if (maxBullet < bullet) bullet = maxBullet
-                setBullet(item, bullet)
+                setBullet(item, cursor, bullet)
                 sound.end?.play(player)
                 val endMessage = bar.endMessage
                 if (endMessage.isNotEmpty()) player.action(endMessage)
@@ -59,17 +60,18 @@ data class ReloadOption(
                 }
             }?.let { setReloadTask(player, it) }
         } else if (maxBullet < lastBullet) {
-            setBullet(item, maxBullet)
+            setBullet(item, cursor, maxBullet)
         }
     }
 
-    fun getBullet(item: CustomItemStack): Int {
-        return item.getPersistentData(gunPlugin)?.get(bulletPersistentKey, PersistentDataType.INTEGER) ?: maxBullet
+    fun getBullet(item: CustomItemStack, cursor: GunAttachment.Cursor): Int {
+        return item.getPersistentData(gunPlugin)?.get(getBulletPersistentKey(cursor), PersistentDataType.INTEGER)
+            ?: maxBullet
     }
 
-    fun setBullet(item: CustomItemStack, bullet: Int) {
+    fun setBullet(item: CustomItemStack, cursor: GunAttachment.Cursor, bullet: Int) {
         item.editPersistentData(gunPlugin) {
-            set(bulletPersistentKey, PersistentDataType.INTEGER, bullet)
+            set(getBulletPersistentKey(cursor), PersistentDataType.INTEGER, bullet)
         }
     }
 
@@ -139,7 +141,9 @@ data class ReloadOption(
             )
         }
 
-        private const val bulletPersistentKey = "ss-gun-bullet"
+        fun getBulletPersistentKey(cursor: GunAttachment.Cursor): String {
+            return "ss-gun-bullet-" + cursor.internalId
+        }
 
         private val reloadTask = mutableMapOf<UUIDPlayer, CustomTask>()
 

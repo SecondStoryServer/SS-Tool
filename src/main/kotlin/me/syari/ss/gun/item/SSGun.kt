@@ -8,9 +8,16 @@ import org.bukkit.Material
 import org.bukkit.inventory.ItemStack
 import org.bukkit.persistence.PersistentDataType
 
-class SSGun(private val id: String, private val type: Material, private val name: String, private val lore: List<String>, val maxDurability: Int, val attachments: Map<GunAction, Attachment>) {
+class SSGun(
+    val id: String,
+    val type: Material,
+    val name: String,
+    val lore: List<String>,
+    val maxDurability: Int,
+    val attachments: Map<GunAction, Attachment>
+) {
     fun create() = SSGunItem(CustomItemStack.create(type, name, lore).apply {
-        editPersistentData(gunPlugin){
+        editPersistentData(gunPlugin) {
             set("ss-gun-id", PersistentDataType.STRING, id)
         }
     }, this)

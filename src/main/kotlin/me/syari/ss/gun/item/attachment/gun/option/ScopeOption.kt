@@ -9,17 +9,22 @@ import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
 
 data class ScopeOption(
-    val amount: Int,
+    val maxAmount: Int,
     val nightVision: Boolean
-){
-    fun scope(player: Player){
-        if (amount == 0) return
-        if (isUseScope(player)) {
+) {
+    fun changeScope(player: Player, delta: Int) {
+        if (maxAmount == 0) return
+        var amount = getScopeAmount(player) + delta
+        if (amount < 0) amount = 0
+        else if (maxAmount < amount) amount = maxAmount
+        if (amount == 0) {
             cancelScope(player)
         } else {
             val speedEffect = player.getPotionEffect(PotionEffectType.SPEED)
             if (speedEffect != null) {
-                player.setMetadata(lastSpeedMetaDataKey, FixedMetadataValue(gunPlugin, speedEffect))
+                if (!player.hasMetadata(lastSpeedMetaDataKey)) {
+                    player.setMetadata(lastSpeedMetaDataKey, FixedMetadataValue(gunPlugin, speedEffect))
+                }
                 player.removePotionEffect(PotionEffectType.SPEED)
             }
             player.setMetadata(zoomMetaDataKey, FixedMetadataValue(gunPlugin, true))
@@ -40,7 +45,7 @@ data class ScopeOption(
         fun getScopeOption(config: CustomConfig, section: String): ScopeOption {
             if(!config.contains(section)) return default
             return ScopeOption(
-                config.get("$section.amount", ConfigDataType.INT, default.amount, false),
+                config.get("$section.amount", ConfigDataType.INT, default.maxAmount, false),
                 config.get("$section.night", ConfigDataType.BOOLEAN, default.nightVision, false)
             )
         }
@@ -50,7 +55,11 @@ data class ScopeOption(
         private const val nightVisionMetaDataKey = "ss-gun-scope-night"
 
         fun isUseScope(player: Player): Boolean {
-            return player.hasMetadata(zoomMetaDataKey) && (player.getMetadata(zoomMetaDataKey)[0]).asBoolean()
+            return player.hasMetadata(zoomMetaDataKey)
+        }
+
+        fun getScopeAmount(player: Player): Int {
+            return if (isUseScope(player)) (player.getMetadata(zoomMetaDataKey)[0]).asInt() else 0
         }
 
         fun cancelScope(player: Player) {

@@ -2,9 +2,10 @@ package me.syari.ss.gun.item.attachment.gun
 
 import me.syari.ss.core.config.CustomConfig
 import me.syari.ss.core.config.dataType.ConfigDataType
-import me.syari.ss.core.item.CustomItemStack
 import me.syari.ss.core.message.Message.action
 import me.syari.ss.gun.Main.Companion.gunPlugin
+import me.syari.ss.gun.item.SSGunItem
+import me.syari.ss.gun.item.attachment.GunAction
 import me.syari.ss.gun.item.attachment.base.Attachment
 import me.syari.ss.gun.item.attachment.base.AttachmentLoader
 import me.syari.ss.gun.item.attachment.gun.option.*
@@ -33,9 +34,9 @@ class GunAttachment(
     private val recoilOption: RecoilOption,
     private val scopeOption: ScopeOption
 ) : Attachment {
-    fun shoot(player: Player, item: CustomItemStack): Boolean {
+    fun shoot(player: Player, cursor: Cursor, ssGunItem: SSGunItem): Boolean {
         val isScope = ScopeOption.isUseScope(player)
-        val isSneak = player.isSneaking
+        val item = ssGunItem.item
         if (!shotOption.canShoot(player, isScope, item)) {
             return false
         }
@@ -43,14 +44,16 @@ class GunAttachment(
             player.action(Message.NoAmmo.message)
             return false
         }
-        val lastBullet = reloadOption.getBullet(item)
+        val lastBullet = getBullet(ssGunItem, cursor)
         val useBullet = bulletOption.burstAmount
         if (lastBullet < useBullet) {
             player.action(Message.NoBullet.message)
             reloadOption.sound.empty?.play(player)
             return false
+        } else {
+            reloadOption.setBullet(item, cursor, lastBullet - useBullet)
         }
-        reloadOption.setBullet(item, lastBullet - useBullet)
+        val isSneak = player.isSneaking
         bulletOption.shoot(player, isSneak, isScope) { victim, bullet, isHeadShot ->
             var damage = hitOptionBase.damage
             hitOptionBase.runEvent(player, victim)
@@ -67,40 +70,29 @@ class GunAttachment(
         shotOption.shoot(player, item)
         ammoOption.consume(player)
         recoilOption.recoil(player)
-        updateName(item)
+        ssGunItem.updateDisplayName()
         return true
     }
 
-    fun reload(player: Player, item: CustomItemStack) {
+    fun reload(player: Player, cursor: Cursor, ssGunItem: SSGunItem) {
         if (ammoOption.isTimingReload && !ammoOption.canConsume(player)) {
             return player.action(Message.NoAmmo.message)
         }
         ammoOption.consume(player)
-        reloadOption.reload(player, item)
+        reloadOption.reload(player, cursor, ssGunItem.item)
     }
 
-    fun scope(player: Player) {
-        scopeOption.scope(player)
+    fun changeScope(player: Player, delta: Int) {
+        scopeOption.changeScope(player, delta)
     }
 
-    enum class Cursor(val internalId: String) {
-        Right("right"),
-        Left("left")
+    fun getBullet(ssGunItem: SSGunItem, cursor: Cursor): Int {
+        return reloadOption.getBullet(ssGunItem.item, cursor)
     }
 
-    fun getCursor(item: CustomItemStack): Cursor? {
-        val id = item.getPersistentData(gunPlugin)?.get(gunCursorPersistentKey, PersistentDataType.STRING)
-        return Cursor.values().firstOrNull { it.internalId == id }
-    }
-
-    fun setCursor(item: CustomItemStack, cursor: Cursor?) {
-        item.editPersistentData(gunPlugin) {
-            set(gunCursorPersistentKey, PersistentDataType.STRING, cursor?.internalId)
-        }
-    }
-
-    fun updateName(item: CustomItemStack) {
-
+    enum class Cursor(val internalId: String, val decencyAction: GunAction) {
+        Right("right", GunAction.ShootRight),
+        Left("left", GunAction.ShootLeft)
     }
 
     companion object {
@@ -129,6 +121,21 @@ class GunAttachment(
             NoAmmo("noammo", "&c弾薬がありません"),
             NoScope("noscope", "&cスコープを覗かなければ撃てません"),
             NoBullet("nobullet", "&c銃弾がありません")
+        }
+
+        fun getCursor(ssGunItem: SSGunItem): Cursor? {
+            val id = ssGunItem.item.getPersistentData(gunPlugin)?.get(gunCursorPersistentKey, PersistentDataType.STRING)
+            return Cursor.values().firstOrNull { it.internalId == id }
+        }
+
+        fun setCursor(ssGunItem: SSGunItem, cursor: Cursor?) {
+            ssGunItem.item.editPersistentData(gunPlugin) {
+                set(gunCursorPersistentKey, PersistentDataType.STRING, cursor?.internalId)
+            }
+        }
+
+        fun getAttachment(ssGunItem: SSGunItem, cursor: Cursor): GunAttachment? {
+            return ssGunItem.gun.attachments[cursor.decencyAction] as? GunAttachment
         }
     }
 
