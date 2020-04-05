@@ -73,7 +73,7 @@ left: # 左クリックで使用
       duration: <Int:1> # リロードにかかる時間(tick)
       delay: <Int:0> # リロード後、発射可能までの時間
       bar: # リロードの進捗
-        style: <String:"${bar} &6${time}"> # 使える変数 ${bar}: バー ${time}: 残り時間
+        style: <String:"${bar} &6${time}"> # 使える変数 ${bar}: バー ${time}s: 残り時間(秒)
         left: <String:"&c|"> # バーの左側
         right: <String:"&7|"> # バーの右側
         amount: <Int:30> # バーの文字数

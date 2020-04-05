@@ -21,21 +21,34 @@ import kotlin.random.Random
 
 class GunAttachment(
     override val wearOut: Int,
-    val bulletOption: BulletOption,
-    val shotOption: ShotOption,
-    val hitOptionBase: HitOption.Base,
-    val hitOptionHeadShot: HitOption.HeadShot,
-    val hitOptionCritical: HitOption.Critical,
-    val reloadOption: ReloadOption,
-    val ammoOption: AmmoOption,
-    val recoilOption: RecoilOption,
-    val scopeOption: ScopeOption
+    private val bulletOption: BulletOption,
+    private val shotOption: ShotOption,
+    private val hitOptionBase: HitOption.Base,
+    private val hitOptionHeadShot: HitOption.HeadShot,
+    private val hitOptionCritical: HitOption.Critical,
+    private val reloadOption: ReloadOption,
+    private val ammoOption: AmmoOption,
+    private val recoilOption: RecoilOption,
+    private val scopeOption: ScopeOption
 ) : Attachment {
-    fun shoot(player: Player, item: CustomItemStack) {
+    fun shoot(player: Player, item: CustomItemStack): Boolean {
         val isScope = ScopeOption.isUseScope(player)
         val isSneak = player.isSneaking
-        if (!shotOption.canShoot(player, isScope, item)) return
-        if (ammoOption.isTimingShot && !ammoOption.canConsume(player)) return player.action(Message.NoAmmo.message)
+        if (!shotOption.canShoot(player, isScope, item)) {
+            return false
+        }
+        if (ammoOption.isTimingShot && !ammoOption.canConsume(player)) {
+            player.action(Message.NoAmmo.message)
+            return false
+        }
+        val lastBullet = reloadOption.getBullet(item)
+        val useBullet = bulletOption.burstAmount
+        if (lastBullet < useBullet) {
+            player.action(Message.NoBullet.message)
+            reloadOption.sound.empty?.play(player)
+            return false
+        }
+        reloadOption.setBullet(item, lastBullet - useBullet)
         bulletOption.shoot(player, isSneak, isScope) { victim, bullet, isHeadShot ->
             var damage = hitOptionBase.damage
             hitOptionBase.runEvent(player, victim)
@@ -52,6 +65,15 @@ class GunAttachment(
         shotOption.shoot(player, item)
         ammoOption.consume(player)
         recoilOption.recoil(player)
+        return true
+    }
+
+    fun reload(player: Player, item: CustomItemStack) {
+        reloadOption.reload(player, item)
+    }
+
+    fun scope(player: Player) {
+        scopeOption.scope(player)
     }
 
     companion object {
@@ -61,7 +83,7 @@ class GunAttachment(
                 Message.values().forEach {
                     val path = "$section.${it.configPath}"
                     val getValue = get(path, ConfigDataType.STRING, false)
-                    if(getValue != null){
+                    if (getValue != null) {
                         it.message = getValue
                     } else {
                         set(path, it.message)
@@ -76,7 +98,8 @@ class GunAttachment(
 
         internal enum class Message(val configPath: String, var message: String) {
             NoAmmo("noammo", "&c弾薬がありません"),
-            NoScope("noscope", "&cスコープを覗かなければ撃てません")
+            NoScope("noscope", "&cスコープを覗かなければ撃てません"),
+            NoBullet("nobullet", "&c銃弾がありません")
         }
     }
 
