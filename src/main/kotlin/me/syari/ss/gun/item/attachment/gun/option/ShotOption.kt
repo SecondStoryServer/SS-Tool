@@ -22,12 +22,12 @@ data class ShotOption(
     val potion: List<PotionEffect>?
 ) {
     fun canShoot(player: Player, isScope: Boolean, item: CustomItemStack): Boolean {
-        if(!isScope && scope) {
+        if (!isScope && scope) {
             player.action(GunAttachment.Companion.Message.NoScope.message)
             return false
         }
-        val lastShot = getLastShot(item) ?: return false
-        return if(shotIdList.contains(lastShot)){
+        val lastShot = getLastShot(item) ?: return true
+        return if (shotHistory.contains(lastShot)) {
             false
         } else {
             setLastShot(item, null)
@@ -38,7 +38,7 @@ data class ShotOption(
     fun shoot(player: Player, item: CustomItemStack){
         val uuid = UUID.randomUUID()
         setLastShot(item, uuid)
-        shotIdList.add(uuid)
+        shotHistory.add(uuid)
         particleList?.spawn(player)
         sound?.play(player)
         if (potion != null) {
@@ -46,7 +46,7 @@ data class ShotOption(
         }
         runLater(gunPlugin, between.toLong()){
             setLastShot(item, null)
-            shotIdList.remove(uuid)
+            shotHistory.remove(uuid)
         }
     }
 
@@ -72,9 +72,9 @@ data class ShotOption(
             }
         }
 
-        private val shotIdList  = mutableSetOf<UUID>()
+        private val shotHistory = mutableSetOf<UUID>()
 
-        const val gunLastShotPersistentKey = "ss-gun-last-shot"
+        private const val gunLastShotPersistentKey = "ss-gun-last-shot"
 
         fun getLastShot(item: CustomItemStack): UUID? {
             return item.getPersistentData(gunPlugin)?.get(gunLastShotPersistentKey, PersistentDataTypeUUID)

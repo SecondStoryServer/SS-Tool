@@ -118,10 +118,10 @@ class GunAttachment(
         }
 
         internal enum class Message(val configPath: String, var message: String) {
-            NoAmmo("noammo", "&c弾薬がありません"),
-            NoScope("noscope", "&cスコープを覗かなければ撃てません"),
-            NoBullet("nobullet", "&c銃弾がありません"),
-            BrokenGun("brokengun", "&c銃が壊れています")
+            NoAmmo("noammo", "&4弾薬がありません"),
+            NoScope("noscope", "&4スコープを覗かなければ撃てません"),
+            NoBullet("nobullet", "&4銃弾がありません"),
+            BrokenGun("brokengun", "&4銃が壊れています")
         }
 
         fun getCursor(ssGunItem: SSGunItem): Cursor? {
@@ -141,7 +141,7 @@ class GunAttachment(
     }
 
     object Loader : AttachmentLoader {
-        override fun get(config: CustomConfig, section: String): Attachment? {
+        override fun get(config: CustomConfig, section: String): GunAttachment? {
             val wearOut = config.get("$section.wearout", ConfigDataType.INT, 1, false)
             return GunAttachment(
                 wearOut,

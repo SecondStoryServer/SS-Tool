@@ -87,7 +87,7 @@ data class BulletOption(
                 }
                 bullet.getNearbyEntities(0.7, 1.0, 0.7)
                     .filterIsInstance<LivingEntity>()
-                    .firstOrNull()?.let { victim ->
+                    .firstOrNull { it != player }?.let { victim ->
                         val isHeadShot = victim.eyeLocation.y - bullet.location.y in -0.5..0.5
                         hitEvent.invoke(victim, bullet, isHeadShot)
                         bullet.remove()

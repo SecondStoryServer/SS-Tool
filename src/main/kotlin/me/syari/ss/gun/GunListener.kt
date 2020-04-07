@@ -14,10 +14,7 @@ import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.block.Action
 import org.bukkit.event.entity.EntityDamageByEntityEvent
-import org.bukkit.event.player.PlayerDropItemEvent
-import org.bukkit.event.player.PlayerInteractEvent
-import org.bukkit.event.player.PlayerItemHeldEvent
-import org.bukkit.event.player.PlayerQuitEvent
+import org.bukkit.event.player.*
 
 object GunListener: Event {
     @EventHandler
@@ -25,6 +22,7 @@ object GunListener: Event {
         val action = e.action
         if (action == Action.PHYSICAL) return
         val ssGunItem = SSGunItem.from(e.item) ?: return
+        e.isCancelled = true
         val player = e.player
         if (ssGunItem.durability < 1) return player.action(GunAttachment.Companion.Message.BrokenGun.message)
 
@@ -98,6 +96,7 @@ object GunListener: Event {
                 return
             }
         }
+        ReloadOption.cancelReload(player)
         if (ScopeOption.isUseScope(player)) {
             ScopeOption.cancelScope(player)
         }
@@ -118,17 +117,19 @@ object GunListener: Event {
     }
 
     @EventHandler
-    fun onCancelReload(e: PlayerQuitEvent) {
+    fun onCancelGun(e: PlayerToggleSneakEvent) {
         val player = e.player
-        ReloadOption.cancelReload(player)
-        if (ScopeOption.isUseScope(player)) {
+        if (!e.isSneaking && ScopeOption.isUseScope(player)) {
             ScopeOption.cancelScope(player)
         }
     }
 
     @EventHandler
-    fun onCancelReload(e: PlayerItemHeldEvent) {
+    fun onCancelGun(e: PlayerQuitEvent) {
         val player = e.player
         ReloadOption.cancelReload(player)
+        if (ScopeOption.isUseScope(player)) {
+            ScopeOption.cancelScope(player)
+        }
     }
 }
