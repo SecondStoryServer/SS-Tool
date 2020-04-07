@@ -76,9 +76,9 @@ sealed class HitOption(
     )
 
     companion object {
-        fun getBaseHitOption(config: CustomConfig, section: String): Base {
+        fun getBaseHitOption(config: CustomConfig, section: String, damageNotFondError: Boolean): Base {
             return Base(
-                config.get("$section.damage", ConfigDataType.FLOAT, 1F, true),
+                config.get("$section.damage", ConfigDataType.FLOAT, 1F, damageNotFondError),
                 if (config.contains("$section.particle"))
                     Particle(
                         config.get("$section.particle.shooter", ConfigDataType.PARTICLE, false),
@@ -101,7 +101,7 @@ sealed class HitOption(
         }
 
         fun getHeadHitOption(config: CustomConfig, section: String): HeadShot {
-            return with(getBaseHitOption(config, section)) {
+            return with(getBaseHitOption(config, section, false)) {
                 HeadShot(
                     damage,
                     particle,
@@ -112,7 +112,7 @@ sealed class HitOption(
         }
 
         fun getCritHitOption(config: CustomConfig, section: String): Critical {
-            return with(getBaseHitOption(config, section)) {
+            return with(getBaseHitOption(config, section, false)) {
                 Critical(
                     damage,
                     if (damage != 1F) config.get("$section.chance", ConfigDataType.FLOAT, 0.0F, true) else 0.0F,

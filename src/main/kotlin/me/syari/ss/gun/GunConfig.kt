@@ -5,9 +5,10 @@ import me.syari.ss.core.auto.OnEnable
 import me.syari.ss.core.config.CreateConfig.config
 import me.syari.ss.core.config.CreateConfig.configDir
 import me.syari.ss.core.config.dataType.ConfigDataType
+import me.syari.ss.core.message.Message.send
 import me.syari.ss.gun.Main.Companion.gunPlugin
-import me.syari.ss.gun.item.attachment.GunAction
 import me.syari.ss.gun.item.SSGun
+import me.syari.ss.gun.item.attachment.GunAction
 import me.syari.ss.gun.item.attachment.base.Attachment
 import me.syari.ss.gun.item.attachment.gun.GunAttachment
 import me.syari.ss.gun.item.attachment.gun.option.AmmoOption
@@ -17,6 +18,7 @@ import org.bukkit.command.CommandSender
 object GunConfig: OnEnable {
     override fun onEnable() {
         loadConfig(console)
+        loadMessage(console)
     }
 
     fun loadConfig(output: CommandSender){
@@ -41,6 +43,7 @@ object GunConfig: OnEnable {
             }
             SSGun.register(id, type, name, lore, durability, attachments)
         }
+        output.send("&b[Gun] &6銃を${SSGun.gunIdList.size}個ロードしました")
 
         configDir(gunPlugin, output, "Ammo"){
             val id = fileName.substringBeforeLast(".yml")

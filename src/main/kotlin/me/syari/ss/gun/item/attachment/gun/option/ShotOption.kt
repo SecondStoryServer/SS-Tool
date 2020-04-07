@@ -74,7 +74,7 @@ data class ShotOption(
 
         private val shotIdList  = mutableSetOf<UUID>()
 
-        private const val gunLastShotPersistentKey = "ss-gun-last-shot"
+        const val gunLastShotPersistentKey = "ss-gun-last-shot"
 
         fun getLastShot(item: CustomItemStack): UUID? {
             return item.getPersistentData(gunPlugin)?.get(gunLastShotPersistentKey, PersistentDataTypeUUID)

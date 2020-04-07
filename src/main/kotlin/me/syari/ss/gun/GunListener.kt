@@ -1,6 +1,7 @@
 package me.syari.ss.gun
 
 import me.syari.ss.core.auto.Event
+import me.syari.ss.core.message.Message.action
 import me.syari.ss.gun.item.SSGunItem
 import me.syari.ss.gun.item.attachment.GunAction
 import me.syari.ss.gun.item.attachment.gun.GunAttachment
@@ -25,6 +26,7 @@ object GunListener: Event {
         if (action == Action.PHYSICAL) return
         val ssGunItem = SSGunItem.from(e.item) ?: return
         val player = e.player
+        if (ssGunItem.durability < 1) return player.action(GunAttachment.Companion.Message.BrokenGun.message)
 
         fun useGun(action: GunAction, cursor: GunAttachment.Cursor) {
             ssGunItem.runEvent(action) {

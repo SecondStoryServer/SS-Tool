@@ -143,7 +143,7 @@ right: # 右クリックで使用
 # Particle:
 # - PARTICLE-SPEED-COUNT # PARTICLE: 種類 / SPEED: 速度<Int> / COUNT: 量<Int>
 # - REDSTONE-R-G-B-SPEED-COUNT # R/G/B: 色<Int>(0~255)
-# - delay-TICK # TICK: 待機時間<Int> これ以降のサウンドを遅らせる
+# - delay-TICK # TICK: 待機時間<Int> これ以降のパーティクルを遅らせる
 # Sound:
 # - SOUND-VOLUME-PITCH # SOUND: 種類 / VOLUME: 音量<Float>(0.1~3.0) / PITCH: 音の高さ<Float>(0.0~2.0)
 # - SOUND-VOLUME-PITCH-AMOUNT # AMOUNT: 音を重ねます<Int> 同じものをコピーする必要はないです

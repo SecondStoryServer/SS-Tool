@@ -90,13 +90,13 @@ class GunAttachment(
         return reloadOption.getBullet(ssGunItem.item, cursor)
     }
 
-    enum class Cursor(val internalId: String, val decencyAction: GunAction) {
+    enum class Cursor(val internalId: String, val dependencyAction: GunAction) {
         Right("right", GunAction.ShootRight),
         Left("left", GunAction.ShootLeft)
     }
 
     companion object {
-        private const val gunCursorPersistentKey = "ss-gun-cursor"
+        const val gunCursorPersistentKey = "ss-gun-cursor"
 
         fun loadMessage(config: CustomConfig, section: String) {
             config.with {
@@ -120,7 +120,8 @@ class GunAttachment(
         internal enum class Message(val configPath: String, var message: String) {
             NoAmmo("noammo", "&c弾薬がありません"),
             NoScope("noscope", "&cスコープを覗かなければ撃てません"),
-            NoBullet("nobullet", "&c銃弾がありません")
+            NoBullet("nobullet", "&c銃弾がありません"),
+            BrokenGun("brokengun", "&c銃が壊れています")
         }
 
         fun getCursor(ssGunItem: SSGunItem): Cursor? {
@@ -135,7 +136,7 @@ class GunAttachment(
         }
 
         fun getAttachment(ssGunItem: SSGunItem, cursor: Cursor): GunAttachment? {
-            return ssGunItem.gun.attachments[cursor.decencyAction] as? GunAttachment
+            return ssGunItem.gun.attachments[cursor.dependencyAction] as? GunAttachment
         }
     }
 
@@ -146,7 +147,7 @@ class GunAttachment(
                 wearOut,
                 getBulletOption(config, "$section.bullet"),
                 getShotOption(config, "$section.shot"),
-                getBaseHitOption(config, "$section.hit"),
+                getBaseHitOption(config, "$section.hit", true),
                 getHeadHitOption(config, "$section.hit.head"),
                 getCritHitOption(config, "$section.hit.crit"),
                 getReloadOption(config, "$section.reload"),

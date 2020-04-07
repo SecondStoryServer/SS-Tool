@@ -23,12 +23,16 @@ interface SneakOption<T> {
 
         companion object {
             fun getFromConfig(config: CustomConfig, section: String, default: IntValue): IntValue {
-                return config.get(section, ConfigDataType.INT, false)?.let {
-                    IntValue(it, it)
-                } ?: IntValue (
-                    config.get("$section.base", ConfigDataType.INT, default.base, false),
-                    config.get("$section.sneak", ConfigDataType.INT, default.sneak, false)
-                )
+                return if (!config.contains("$section.base") && !config.contains("$section.sneak")) {
+                    config.get(section, ConfigDataType.INT, false)?.let {
+                        IntValue(it, it)
+                    } ?: IntValue(default.base, default.sneak)
+                } else {
+                    IntValue(
+                        config.get("$section.base", ConfigDataType.INT, default.base, false),
+                        config.get("$section.sneak", ConfigDataType.INT, default.sneak, false)
+                    )
+                }
             }
         }
     }
@@ -41,12 +45,16 @@ interface SneakOption<T> {
 
         companion object {
             fun getFromConfig(config: CustomConfig, section: String, default: FloatValue): FloatValue {
-                return config.get(section, ConfigDataType.FLOAT, false)?.let {
-                    FloatValue(it, it)
-                } ?: FloatValue (
-                    config.get("$section.base", ConfigDataType.FLOAT, default.base, false),
-                    config.get("$section.sneak", ConfigDataType.FLOAT, default.sneak, false)
-                )
+                return if (!config.contains("$section.base") && !config.contains("$section.sneak")) {
+                    config.get(section, ConfigDataType.FLOAT, false)?.let {
+                        FloatValue(it, it)
+                    } ?: FloatValue(default.base, default.sneak)
+                } else {
+                    FloatValue(
+                        config.get("$section.base", ConfigDataType.FLOAT, default.base, false),
+                        config.get("$section.sneak", ConfigDataType.FLOAT, default.sneak, false)
+                    )
+                }
             }
         }
     }

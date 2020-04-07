@@ -18,12 +18,14 @@ class SSGun(
 ) {
     fun create() = SSGunItem(CustomItemStack.create(type, name, lore).apply {
         editPersistentData(gunPlugin) {
-            set("ss-gun-id", PersistentDataType.STRING, id)
+            set(gunIdPersistentKey, PersistentDataType.STRING, id)
         }
     }, this)
 
     companion object {
         private val gunList = mutableMapOf<String, SSGun>()
+
+        val gunIdList get() = gunList.keys
 
         fun from(item: ItemStack?): SSGun? {
             return item?.let { from(CustomItemStack.create(item)) }
@@ -34,7 +36,7 @@ class SSGun(
         }
 
         fun get(id: String?): SSGun? {
-            return gunList[id]
+            return id?.let { gunList[id.toLowerCase()] }
         }
 
         fun register(
@@ -45,12 +47,13 @@ class SSGun(
             maxDurability: Int,
             attachments: Map<GunAction, Attachment>
         ) {
-            val gun = SSGun(id, type, name, lore, maxDurability, attachments)
-            gunList[id] = gun
+            gunList[id.toLowerCase()] = SSGun(id, type, name, lore, maxDurability, attachments)
         }
 
-        fun clearAll(){
+        fun clearAll() {
             gunList.clear()
         }
+
+        const val gunIdPersistentKey = "ss-gun-id"
     }
 }

@@ -1,10 +1,13 @@
 package me.syari.ss.gun.item
 
 import me.syari.ss.core.item.CustomItemStack
+import me.syari.ss.core.item.ItemStackPlus.give
+import me.syari.ss.core.item.ItemStackPlus.giveOrDrop
 import me.syari.ss.gun.Main.Companion.gunPlugin
 import me.syari.ss.gun.item.attachment.GunAction
 import me.syari.ss.gun.item.attachment.base.Attachment
 import me.syari.ss.gun.item.attachment.gun.GunAttachment
+import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import org.bukkit.persistence.PersistentDataType
 
@@ -17,7 +20,7 @@ class SSGunItem(val item: CustomItemStack, val gun: SSGun) {
         item.editPersistentData(gunPlugin) {
             set(gunDurabilityPersistentKey, PersistentDataType.INTEGER, durability)
         }
-        item.durability = (item.type.maxDurability * durability) / gun.maxDurability
+        item.damage = item.type.maxDurability - ((durability * item.type.maxDurability) / gun.maxDurability)
     }
 
     fun runEvent(gunAction: GunAction, run: (Attachment) -> Unit) {
@@ -50,6 +53,24 @@ class SSGunItem(val item: CustomItemStack, val gun: SSGun) {
         }
     }
 
+    private fun give(player: Player, orDrop: Boolean) {
+        updateDisplayName()
+        updateDurability()
+        if (orDrop) {
+            player.giveOrDrop(item)
+        } else {
+            player.give(item)
+        }
+    }
+
+    fun give(player: Player) {
+        give(player, false)
+    }
+
+    fun giveOrDrop(player: Player) {
+        give(player, true)
+    }
+
     companion object {
         fun from(item: ItemStack?): SSGunItem? {
             return item?.let { from(CustomItemStack.create(item)) }
@@ -63,6 +84,6 @@ class SSGunItem(val item: CustomItemStack, val gun: SSGun) {
             return SSGun.get(id)?.create()
         }
 
-        private const val gunDurabilityPersistentKey = "ss-gun-durability"
+        const val gunDurabilityPersistentKey = "ss-gun-durability"
     }
 }
