@@ -1,8 +1,5 @@
 package me.syari.ss.gun.item.attachment.gun.option
 
-import me.libraryaddict.disguise.DisguiseAPI
-import me.libraryaddict.disguise.disguisetypes.DisguiseType
-import me.libraryaddict.disguise.disguisetypes.MiscDisguise
 import me.syari.ss.core.config.CustomConfig
 import me.syari.ss.core.config.dataType.ConfigDataType
 import me.syari.ss.core.particle.CustomParticleList
@@ -11,10 +8,12 @@ import me.syari.ss.core.scheduler.CustomScheduler.runRepeatTimes
 import me.syari.ss.core.scheduler.CustomScheduler.runTimer
 import me.syari.ss.core.scheduler.CustomTask
 import me.syari.ss.gun.Main.Companion.gunPlugin
+import me.syari.ss.gun.NMS
 import me.syari.ss.gun.item.attachment.gun.option.value.SneakOption
 import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.entity.*
+import org.bukkit.inventory.ItemStack
 import org.bukkit.metadata.FixedMetadataValue
 import org.bukkit.util.Vector
 import kotlin.math.cos
@@ -90,43 +89,50 @@ data class BulletOption(
         }
     }
 
-    interface Type {
-        object Snow : Type {
+    sealed class Type(private val entityType: EntityType) {
+        object Snow : Type(EntityType.SNOWBALL) {
             override fun spawn(location: Location, source: Player): Entity {
-                return location.world.spawnEntity(location, EntityType.SNOWBALL).apply {
-                    if (this is Snowball) {
+                return super.spawn(location, source).apply {
+                    if (this is Projectile) {
                         shooter = source
                     }
                 }
             }
         }
 
-        object Arrow : Type {
+        object Arrow : Type(EntityType.ARROW) {
             override fun spawn(location: Location, source: Player): Entity {
-                return location.world.spawnEntity(location, EntityType.ARROW).apply {
-                    if (this is org.bukkit.entity.Arrow) {
+                return super.spawn(location, source).apply {
+                    if (this is Projectile) {
                         shooter = source
                     }
                 }
             }
         }
 
-        class Item(private val material: Material) : Type {
+        class Item(private val material: Material) : Type(EntityType.DROPPED_ITEM) {
             override fun spawn(location: Location, source: Player): Entity {
-                return Snow.spawn(location, source).apply {
-                    val disguise = MiscDisguise(DisguiseType.DROPPED_ITEM, material)
-                    DisguiseAPI.disguiseToAll(this, disguise)
+                return super.spawn(location, source).apply {
+                    if (this is org.bukkit.entity.Item) {
+                        setItemStack(ItemStack(material))
+                        setCanMobPickup(false)
+                        pickupDelay = Int.MAX_VALUE
+                    }
                 }
             }
         }
 
-        object None : Type {
+        object None : Type(EntityType.SNOWBALL) {
             override fun spawn(location: Location, source: Player): Entity {
-                return Item(Material.AIR).spawn(location, source)
+                return super.spawn(location, source).apply {
+                    NMS.makeInvisibleEntity(this)
+                }
             }
         }
 
-        fun spawn(location: Location, source: Player): Entity
+        open fun spawn(location: Location, source: Player): Entity {
+            return location.world.spawnEntity(location, entityType)
+        }
 
         companion object {
             fun fromString(value: String?): Type? {

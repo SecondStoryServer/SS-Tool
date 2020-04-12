@@ -5,4 +5,3 @@ main: me.syari.ss.gun.Main
 author: sya_ri
 depend:
   - "SS-Core"
-  - "LibsDisguises"
