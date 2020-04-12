@@ -15,13 +15,20 @@ repositories {
     maven {
         url ssMavenRepoURL
     }
+    maven {
+        url "http://repo.md-5.net/content/groups/public/" // For LibsDisguises
+    }
+    maven {
+        url "https://repo.dmulloy2.net/nexus/repository/public/" // For ProtocolLib
+    }
 }
 
 dependencies {
     implementation("com.destroystokyo.paper:paper-api:1.15.2-R0.1-SNAPSHOT")
     implementation("me.syari.ss.core:SS-Core:2.3")
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
-    implementation "org.jetbrains.kotlin:kotlin-reflect"
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+    implementation("org.jetbrains.kotlin:kotlin-reflect")
+    implementation("LibsDisguises:LibsDisguises:10.0.3-SNAPSHOT")
 }
 
 compileKotlin {

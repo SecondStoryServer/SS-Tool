@@ -1,5 +1,8 @@
 package me.syari.ss.gun.item.attachment.gun.option
 
+import me.libraryaddict.disguise.DisguiseAPI
+import me.libraryaddict.disguise.disguisetypes.DisguiseType
+import me.libraryaddict.disguise.disguisetypes.MiscDisguise
 import me.syari.ss.core.config.CustomConfig
 import me.syari.ss.core.config.dataType.ConfigDataType
 import me.syari.ss.core.particle.CustomParticleList
@@ -12,10 +15,7 @@ import me.syari.ss.gun.item.attachment.gun.option.value.SneakOption
 import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.entity.*
-import org.bukkit.inventory.ItemStack
 import org.bukkit.metadata.FixedMetadataValue
-import org.bukkit.potion.PotionEffect
-import org.bukkit.potion.PotionEffectType
 import org.bukkit.util.Vector
 import kotlin.math.cos
 import kotlin.math.sin
@@ -25,7 +25,7 @@ data class BulletOption(
     val type: Type,
     val burstAmount: Int,
     val burstDelay: Int,
-    val bulletVector: BulletVector,
+    val bulletSpeed: Float,
     val spread: SneakOption.IntValue,
     val scopeSpread: Float,
     val remove: Int,
@@ -57,23 +57,13 @@ data class BulletOption(
         runRepeatTimes(gunPlugin, burstDelay.toLong(), burstAmount) {
             val direction = Vector(x + spread.generate(), y + spread.generate(), z + spread.generate())
             val bullet = type.spawn(projectileLocation, player)
-            var speed = bulletVector.speed
-            val up = bulletVector.up
-            val gravity = bulletVector.gravity
-            bullet.velocity = direction.clone().multiply(speed)
+            bullet.setMetadata(sourcePlayerMetaDataKey, FixedMetadataValue(gunPlugin, player))
+            bullet.velocity = direction.multiply(bulletSpeed)
             val taskList = mutableSetOf<CustomTask>()
             runLater(gunPlugin, remove.toLong()) {
                 bullet.remove()
                 taskList.forEach { it.cancel() }
             }?.let { taskList.add(it) }
-            if (up != 0F || gravity != 0F) {
-                runTimer(gunPlugin, 1) {
-                    speed += up
-                    bullet.velocity = direction
-                        .add(Vector(0F, -gravity, 0F))
-                        .clone().multiply(speed)
-                }?.let { taskList.add(it) }
-            }
             if (particleList != null) {
                 var period = particleList.getRequireTime()
                 if (period < 1L) period = 1
@@ -100,70 +90,50 @@ data class BulletOption(
         }
     }
 
-    sealed class Type(private val entityType: EntityType) {
-        class Snow(private val fire: Boolean) : Type(EntityType.SNOWBALL){
+    interface Type {
+        object Snow : Type {
             override fun spawn(location: Location, source: Player): Entity {
-                return super.spawn(location, source).apply {
-                    if(this is Projectile){
+                return location.world.spawnEntity(location, EntityType.SNOWBALL).apply {
+                    if (this is Snowball) {
                         shooter = source
                     }
-                    if(fire) fireTicks = 6000
                 }
             }
         }
 
-        class Arrow(private val fire: Boolean) : Type(EntityType.ARROW){
+        object Arrow : Type {
             override fun spawn(location: Location, source: Player): Entity {
-                return super.spawn(location, source).apply {
-                    if(this is Projectile){
+                return location.world.spawnEntity(location, EntityType.ARROW).apply {
+                    if (this is org.bukkit.entity.Arrow) {
                         shooter = source
                     }
-                    if(fire) fireTicks = 6000
                 }
             }
         }
 
-        class Item(private val material: Material) : Type(EntityType.DROPPED_ITEM){
+        class Item(private val material: Material) : Type {
             override fun spawn(location: Location, source: Player): Entity {
-                return super.spawn(location, source).apply {
-                    if(this is org.bukkit.entity.Item){
-                        setItemStack(ItemStack(material))
-                        setCanMobPickup(false)
-                        pickupDelay = Int.MAX_VALUE
-                    }
+                return Snow.spawn(location, source).apply {
+                    val disguise = MiscDisguise(DisguiseType.DROPPED_ITEM, material)
+                    DisguiseAPI.disguiseToAll(this, disguise)
                 }
             }
         }
 
-        object None : Type(EntityType.BAT){
+        object None : Type {
             override fun spawn(location: Location, source: Player): Entity {
-                return super.spawn(location, source).apply {
-                    if(this is LivingEntity) {
-                        setAI(false)
-                        isSilent = true
-                        PotionEffect(PotionEffectType.INVISIBILITY, 6000, 1, false, false)
-                            .apply(this)
-                    }
-                }
+                return Item(Material.AIR).spawn(location, source)
             }
         }
 
-        open fun spawn(location: Location, source: Player): Entity {
-            return location.world.spawnEntity(location, entityType).apply {
-                setMetadata(sourcePlayerMetaDataKey, FixedMetadataValue(gunPlugin, source))
-            }
-        }
+        fun spawn(location: Location, source: Player): Entity
 
         companion object {
             fun fromString(value: String?): Type? {
                 val splitValue = value?.split("-") ?: return null
                 return when (splitValue[0].toLowerCase()) {
-                    "snow" -> Snow(
-                        splitValue.getOrNull(1)?.toLowerCase() == "fire"
-                    )
-                    "arrow" -> Arrow(
-                        splitValue.getOrNull(1)?.toLowerCase() == "fire"
-                    )
+                    "snow" -> Snow
+                    "arrow" -> Arrow
                     "item" -> Item(
                         splitValue.getOrNull(1)?.toUpperCase()?.let {
                             Material.getMaterial(it)
@@ -175,18 +145,12 @@ data class BulletOption(
         }
     }
 
-    data class BulletVector(
-        val speed: Float,
-        val up: Float,
-        val gravity: Float
-    )
-
     companion object {
         private val default = BulletOption(
-            Type.Snow(false),
+            Type.Snow,
             1,
             0,
-            BulletVector(30F, 0F, 0F),
+            30F,
             SneakOption.IntValue(),
             1F,
             100,
@@ -206,23 +170,12 @@ data class BulletOption(
             }
             val spread = SneakOption.IntValue.getFromConfig(config, "$section.spread", default.spread)
             val scopeSpread = config.get("$section.spread.scope", ConfigDataType.FLOAT, 1.0F, false)
-            val bulletVector = if (config.contains("$section.vector")) {
-                with(default.bulletVector) {
-                    BulletVector(
-                        config.get("$section.vector.speed", ConfigDataType.FLOAT, speed, false),
-                        config.get("$section.vector.up", ConfigDataType.FLOAT, up, false),
-                        config.get("$section.vector.gravity", ConfigDataType.FLOAT, gravity, false)
-                    )
-                }
-            } else {
-                default.bulletVector
-            }
             return with(default){
                 BulletOption(
                     Type.fromString(config.get("$section.type", ConfigDataType.STRING, false)) ?: type,
                     burstAmount,
                     burstDelay,
-                    bulletVector,
+                    config.get("$section.speed", ConfigDataType.FLOAT, bulletSpeed, false),
                     spread,
                     scopeSpread,
                     config.get("$section.remove", ConfigDataType.INT, remove, false),

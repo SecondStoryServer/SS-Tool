@@ -30,9 +30,9 @@ data class AmmoOption(
     private fun hasAmmo(player: Player): Boolean {
         var sum = 0
         var has = false
-        runEachAmmo(player){ item ->
+        runEachAmmo(player) { item ->
             sum -= item.amount
-            if(amount < sum){
+            if (amount < sum) {
                 has = true
                 return@runEachAmmo
             }
@@ -40,20 +40,23 @@ data class AmmoOption(
         return has
     }
 
+    private val isUseAmmo get() = item != null && timing != null
+
     fun canConsume(player: Player): Boolean {
-        return item == null || timing == null || hasAmmo(player)
+        return !isUseAmmo || hasAmmo(player)
     }
 
     fun consume(player: Player) {
-        var sum = 0
-        runEachAmmo(player){ item ->
+        if (!isUseAmmo) return
+        var sum = amount
+        runEachAmmo(player) { item ->
             val amount = item.amount
-            if(sum < amount){
+            if (sum < amount) {
                 item.amount = sum - amount
                 return@runEachAmmo
             } else {
                 item.amount = 0
-                sum += amount
+                sum -= amount
             }
         }
     }

@@ -13,6 +13,7 @@ import me.syari.ss.gun.item.SSGun
 import me.syari.ss.gun.item.SSGun.Companion.gunIdPersistentKey
 import me.syari.ss.gun.item.SSGunItem
 import me.syari.ss.gun.item.SSGunItem.Companion.gunDurabilityPersistentKey
+import me.syari.ss.gun.item.attachment.gun.GunAttachment
 import me.syari.ss.gun.item.attachment.gun.GunAttachment.Companion.getCursor
 import org.bukkit.entity.Player
 import org.bukkit.persistence.PersistentDataType
@@ -20,11 +21,11 @@ import org.bukkit.persistence.PersistentDataType
 object GunCommand : OnEnable {
     override fun onEnable() {
         createCommand(gunPlugin, "gun", "Gun",
-            tab { _, _ -> element("info", "get", "give", "durability", "reload") },
+            tab { _, _ -> element("info", "get", "give", "bullet", "durability", "reload") },
             tab("give") { _, _ -> onlinePlayers },
             tab("get", "give *") { _, _ -> element(SSGun.gunIdList) },
             tab("reload") { _, _ -> element("item", "message") },
-            tab("durability") { _, _ -> element("set", "inc", "dec") }
+            tab("bullet", "durability") { _, _ -> element("set", "inc", "dec") }
         ) { sender, args ->
             when (args.whenIndex(0)) {
                 "info" -> {
@@ -105,11 +106,48 @@ object GunCommand : OnEnable {
                         )
                     }
                 }
+                "bullet" -> {
+                    if (sender !is Player) return@createCommand sendError(ErrorMessage.OnlyPlayer)
+                    val ssGunItem = SSGunItem.from(sender.inventory.itemInMainHand)
+                        ?: return@createCommand sendWithPrefix("&c銃を持っていません")
+                    val cursor = getCursor(ssGunItem)
+                        ?: return@createCommand sendWithPrefix("&c銃弾が選択されていません")
+                    val reloadOption = ssGunItem.gun.attachments[cursor.dependencyAction] as? GunAttachment
+                        ?: return@createCommand sendWithPrefix("&c銃が取得できませんでした")
+                    when (args.whenIndex(1)) {
+                        "set" -> {
+                            val bullet = args.getOrNull(2)?.toIntOrNull()
+                                ?: return@createCommand sendWithPrefix("&c設定する弾数を入力してください")
+                            reloadOption.setBullet(ssGunItem, cursor, bullet)
+                            ssGunItem.updateDisplayName()
+                        }
+                        "inc" -> {
+                            val bullet = args.getOrNull(2)?.toIntOrNull()
+                                ?: return@createCommand sendWithPrefix("&c加算する弾数を入力してください")
+                            val lastBullet = reloadOption.getBullet(ssGunItem, cursor)
+                            reloadOption.setBullet(ssGunItem, cursor, lastBullet + bullet)
+                            ssGunItem.updateDisplayName()
+                        }
+                        "dec" -> {
+                            val bullet = args.getOrNull(2)?.toIntOrNull()
+                                ?: return@createCommand sendWithPrefix("&c減算する弾数を入力してください")
+                            val lastBullet = reloadOption.getBullet(ssGunItem, cursor)
+                            reloadOption.setBullet(ssGunItem, cursor, lastBullet - bullet)
+                            ssGunItem.updateDisplayName()
+                        }
+                        else -> sendHelp(
+                            "gun bullet set" to "銃の弾数を設定します",
+                            "gun bullet inc" to "銃の弾数を加算します",
+                            "gun bullet dec" to "銃の弾数を減算します"
+                        )
+                    }
+                }
                 else -> sendHelp(
                     "gun get" to "銃を入手します",
                     "gun give" to "銃を渡します",
                     "gun reload" to "コンフィグのリロードをします",
-                    "gun durability" to "銃の耐久を変更します"
+                    "gun durability" to "銃の耐久を変更します",
+                    "gun bullet" to "銃の弾数を変更します"
                 )
             }
         }

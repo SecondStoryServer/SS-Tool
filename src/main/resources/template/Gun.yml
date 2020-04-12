@@ -9,14 +9,11 @@ left: # 左クリックで使用
   gun: # 射撃モード
     wearout: <Int:1> # 耐久消費
     bullet: # 弾
-      type: <{snow/snow-fire/arrow/arrow-fire/item-MATERIAL/none}:snow> # 弾の種類 {雪玉/燃えた雪玉/矢/燃えた矢/アイテム-<Material>/透明}
+      type: <{snow/arrow/item-MATERIAL/none}:snow> # 弾の種類 {雪玉/矢/アイテム-<Material>/透明}
       burst:
         amount: <Int:1> # 弾の数
         delay: <Int:0> # 弾同士の間隔
-      vector: # 速度関連
-        speed: <Float:30> # 弾の初速
-        up: <Float:0> # 加速度 毎tick、弾速が加算されていく
-        gravity: <Float:0> # 地面方向への加速度
+      speed: <Float:30> # 弾の速度
       spread: # 集弾性
         # base と sneak が 同じ場合は
         # spread: <Int>

@@ -86,6 +86,10 @@ class GunAttachment(
         scopeOption.changeScope(player, delta)
     }
 
+    fun setBullet(ssGunItem: SSGunItem, cursor: Cursor, bullet: Int) {
+        reloadOption.setBullet(ssGunItem.item, cursor, bullet)
+    }
+
     fun getBullet(ssGunItem: SSGunItem, cursor: Cursor): Int {
         return reloadOption.getBullet(ssGunItem.item, cursor)
     }
