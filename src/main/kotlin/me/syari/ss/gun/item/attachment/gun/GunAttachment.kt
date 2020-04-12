@@ -51,7 +51,7 @@ class GunAttachment(
             reloadOption.sound.empty?.play(player)
             return false
         } else {
-            reloadOption.setBullet(item, cursor, lastBullet - useBullet)
+            reloadOption.setBullet(ssGunItem, cursor, lastBullet - useBullet)
         }
         val isSneak = player.isSneaking
         bulletOption.shoot(player, isSneak, isScope) { victim, bullet, isHeadShot ->
@@ -70,28 +70,29 @@ class GunAttachment(
         shotOption.shoot(player, item)
         ammoOption.consume(player)
         recoilOption.recoil(player)
-        ssGunItem.updateDisplayName()
         return true
     }
 
     fun reload(player: Player, cursor: Cursor, ssGunItem: SSGunItem) {
-        if (ammoOption.isTimingReload && !ammoOption.canConsume(player)) {
-            return player.action(Message.NoAmmo.message)
+        if (ammoOption.isTimingReload) {
+            if (!ammoOption.canConsume(player)) {
+                return player.action(Message.NoAmmo.message)
+            }
+            ammoOption.consume(player)
         }
-        ammoOption.consume(player)
-        reloadOption.reload(player, cursor, ssGunItem.item)
+        reloadOption.reload(player, cursor, ssGunItem)
     }
 
-    fun changeScope(player: Player, delta: Int) {
-        scopeOption.changeScope(player, delta)
+    fun scope(player: Player) {
+        scopeOption.scope(player)
     }
 
     fun setBullet(ssGunItem: SSGunItem, cursor: Cursor, bullet: Int) {
-        reloadOption.setBullet(ssGunItem.item, cursor, bullet)
+        reloadOption.setBullet(ssGunItem, cursor, bullet)
     }
 
     fun getBullet(ssGunItem: SSGunItem, cursor: Cursor): Int {
-        return reloadOption.getBullet(ssGunItem.item, cursor)
+        return reloadOption.getBullet(ssGunItem, cursor)
     }
 
     enum class Cursor(val internalId: String, val dependencyAction: GunAction) {

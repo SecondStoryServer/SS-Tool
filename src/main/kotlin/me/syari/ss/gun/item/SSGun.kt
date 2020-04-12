@@ -54,6 +54,10 @@ class SSGun(
             gunList.clear()
         }
 
-        const val gunIdPersistentKey = "ss-gun-id"
+        private const val gunIdPersistentKey = "ss-gun-id"
+
+        fun getGunId(item: CustomItemStack): String? {
+            return item.getPersistentData(gunPlugin)?.get(gunIdPersistentKey, PersistentDataType.STRING)
+        }
     }
 }

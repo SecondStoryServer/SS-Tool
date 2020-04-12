@@ -12,12 +12,8 @@ data class ScopeOption(
     val maxAmount: Int,
     val nightVision: Boolean
 ) {
-    fun changeScope(player: Player, delta: Int) {
-        if (maxAmount == 0) return
-        var amount = getScopeAmount(player) + delta
-        if (amount < 0) amount = 0
-        else if (maxAmount < amount) amount = maxAmount
-        if (amount == 0) {
+    fun scope(player: Player) {
+        if (isUseScope(player)) {
             cancelScope(player)
         } else {
             val speedEffect = player.getPotionEffect(PotionEffectType.SPEED)
@@ -28,7 +24,7 @@ data class ScopeOption(
                 player.removePotionEffect(PotionEffectType.SPEED)
             }
             player.setMetadata(zoomMetaDataKey, FixedMetadataValue(gunPlugin, true))
-            PotionEffectType.SPEED.createEffect(2400, -amount).apply(player)
+            PotionEffectType.SPEED.createEffect(2400, -maxAmount).apply(player)
             if (nightVision && !player.hasPotionEffect(PotionEffectType.NIGHT_VISION)) {
                 player.setMetadata(nightVisionMetaDataKey, FixedMetadataValue(gunPlugin, true))
                 PotionEffectType.NIGHT_VISION.createEffect(2400, -1)
@@ -70,7 +66,7 @@ data class ScopeOption(
                 speedEffect?.apply(player)
                 player.removeMetadata(lastSpeedMetaDataKey, gunPlugin)
             }
-            if ((player.getMetadata(nightVisionMetaDataKey)[0]).asBoolean()) {
+            if (player.hasMetadata(nightVisionMetaDataKey)) {
                 player.removePotionEffect(PotionEffectType.NIGHT_VISION)
                 player.removeMetadata(nightVisionMetaDataKey, gunPlugin)
             }

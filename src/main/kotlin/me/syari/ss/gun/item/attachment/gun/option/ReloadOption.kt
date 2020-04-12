@@ -2,7 +2,6 @@ package me.syari.ss.gun.item.attachment.gun.option
 
 import me.syari.ss.core.config.CustomConfig
 import me.syari.ss.core.config.dataType.ConfigDataType
-import me.syari.ss.core.item.CustomItemStack
 import me.syari.ss.core.message.Message.action
 import me.syari.ss.core.player.UUIDPlayer
 import me.syari.ss.core.scheduler.CustomScheduler.runLater
@@ -10,6 +9,7 @@ import me.syari.ss.core.scheduler.CustomScheduler.runRepeatTimes
 import me.syari.ss.core.scheduler.CustomTask
 import me.syari.ss.core.sound.CustomSoundList
 import me.syari.ss.gun.Main.Companion.gunPlugin
+import me.syari.ss.gun.item.SSGunItem
 import me.syari.ss.gun.item.attachment.gun.GunAttachment
 import org.bukkit.entity.Player
 import org.bukkit.persistence.PersistentDataType
@@ -22,14 +22,14 @@ data class ReloadOption(
     val bar: Bar,
     val sound: Sound
 ) {
-    fun reload(player: Player, cursor: GunAttachment.Cursor, item: CustomItemStack) {
-        val lastBullet = getBullet(item, cursor)
+    fun reload(player: Player, cursor: GunAttachment.Cursor, ssGunItem: SSGunItem) {
+        val lastBullet = getBullet(ssGunItem, cursor)
         val maxBullet = maxBullet
         if (lastBullet < maxBullet) {
             fun endReload() {
                 var bullet = lastBullet + onceBullet
                 if (maxBullet < bullet) bullet = maxBullet
-                setBullet(item, cursor, bullet)
+                setBullet(ssGunItem, cursor, bullet)
                 sound.end?.play(player)
                 val endMessage = bar.endMessage
                 if (endMessage.isNotEmpty()) player.action(endMessage)
@@ -60,19 +60,21 @@ data class ReloadOption(
                 }
             }?.let { setReloadTask(player, it) }
         } else if (maxBullet < lastBullet) {
-            setBullet(item, cursor, maxBullet)
+            setBullet(ssGunItem, cursor, maxBullet)
         }
     }
 
-    fun getBullet(item: CustomItemStack, cursor: GunAttachment.Cursor): Int {
-        return item.getPersistentData(gunPlugin)?.get(getBulletPersistentKey(cursor), PersistentDataType.INTEGER)
+    fun getBullet(ssGunItem: SSGunItem, cursor: GunAttachment.Cursor): Int {
+        return ssGunItem.item.getPersistentData(gunPlugin)
+            ?.get(getBulletPersistentKey(cursor), PersistentDataType.INTEGER)
             ?: maxBullet
     }
 
-    fun setBullet(item: CustomItemStack, cursor: GunAttachment.Cursor, bullet: Int) {
-        item.editPersistentData(gunPlugin) {
+    fun setBullet(ssGunItem: SSGunItem, cursor: GunAttachment.Cursor, bullet: Int) {
+        ssGunItem.item.editPersistentData(gunPlugin) {
             set(getBulletPersistentKey(cursor), PersistentDataType.INTEGER, bullet)
         }
+        ssGunItem.updateDisplayName()
     }
 
     data class Bar(

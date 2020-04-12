@@ -64,9 +64,7 @@ data class BulletOption(
                 taskList.forEach { it.cancel() }
             }?.let { taskList.add(it) }
             if (particleList != null) {
-                var period = particleList.getRequireTime()
-                if (period < 1L) period = 1
-                runTimer(gunPlugin, period) {
+                runTimer(gunPlugin, particleList.getRequireTime()) {
                     particleList.spawn(bullet)
                 }?.let { taskList.add(it) }
             }

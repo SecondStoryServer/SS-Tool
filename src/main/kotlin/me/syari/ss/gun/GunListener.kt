@@ -29,12 +29,15 @@ object GunListener: Event {
         fun useGun(action: GunAction, cursor: GunAttachment.Cursor) {
             ssGunItem.runEvent(action) {
                 if (it is GunAttachment) {
-                    if (GunAttachment.getCursor(ssGunItem) == cursor) {
+                    val attachmentCursor = GunAttachment.getCursor(ssGunItem)
+                    if (attachmentCursor == cursor) {
                         val isSuccess = it.shoot(player, cursor, ssGunItem)
                         if (isSuccess) {
                             ssGunItem.durability -= it.wearOut
                             ssGunItem.updateDurability()
                         }
+                    } else if (player.isSneaking) {
+                        if (attachmentCursor != null) it.scope(player)
                     } else {
                         ReloadOption.cancelReload(player)
                         GunAttachment.setCursor(ssGunItem, cursor)
@@ -76,33 +79,6 @@ object GunListener: Event {
     }
 
     @EventHandler
-    fun onGunScope(e: PlayerItemHeldEvent) {
-        val player = e.player
-        if (player.isSneaking) {
-            val previousSlot = e.previousSlot
-            val scopeDownSlot = ((previousSlot + 9) - 1) % 9
-            val scopeUpSlot = (previousSlot + 1) % 9
-            val delta = when (e.newSlot) {
-                scopeDownSlot -> -1
-                scopeUpSlot -> +1
-                else -> null
-            }
-            if (delta != null) {
-                val ssGunItem = SSGunItem.from(player.inventory.itemInMainHand) ?: return
-                val cursor = GunAttachment.getCursor(ssGunItem) ?: return
-                val attachment = GunAttachment.getAttachment(ssGunItem, cursor) ?: return
-                attachment.changeScope(player, delta)
-                e.isCancelled = true
-                return
-            }
-        }
-        ReloadOption.cancelReload(player)
-        if (ScopeOption.isUseScope(player)) {
-            ScopeOption.cancelScope(player)
-        }
-    }
-
-    @EventHandler
     fun onMeleeDamage(e: EntityDamageByEntityEvent) {
         val attacker = e.damager as? Player ?: return
         val victim = e.entity as? LivingEntity ?: return
@@ -120,6 +96,15 @@ object GunListener: Event {
     fun onCancelGun(e: PlayerToggleSneakEvent) {
         val player = e.player
         if (!e.isSneaking && ScopeOption.isUseScope(player)) {
+            ScopeOption.cancelScope(player)
+        }
+    }
+
+    @EventHandler
+    fun onCancelGun(e: PlayerItemHeldEvent) {
+        val player = e.player
+        ReloadOption.cancelReload(player)
+        if (ScopeOption.isUseScope(player)) {
             ScopeOption.cancelScope(player)
         }
     }

@@ -18,6 +18,7 @@ data class AmmoOption(
     val isTimingReload = timing == Timing.Reload
 
     private fun runEachAmmo(player: Player, run: (CustomItemStack) -> Unit){
+        if (id == null) return
         player.inventory.contents.forEach {
             val item = CustomItemStack.create(it)
             if(item.type == Material.AIR) return@forEach

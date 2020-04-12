@@ -1,6 +1,7 @@
 package me.syari.ss.gun.item.attachment.gun.option
 
 import me.syari.ss.core.config.CustomConfig
+import me.syari.ss.gun.NMS
 import me.syari.ss.gun.item.attachment.gun.option.value.SneakOption
 import org.bukkit.entity.Player
 import org.bukkit.util.Vector
@@ -13,28 +14,27 @@ data class RecoilOption(
         val isSneak = player.isSneaking
         val location = player.location
         if (playerRecoil.isEnable) {
-            player.velocity = location.direction.multiply(-playerRecoil.value.get(isSneak)).multiply(Vector(1, 0, 1))
+            player.velocity =
+                location.direction.multiply(-playerRecoil.value.get(isSneak)).multiply(Vector(0.1, 0.0, 0.1))
         }
         if (cameraRecoil.isEnable) {
             val up = cameraRecoil.up.get(isSneak).generate()
             val side = cameraRecoil.side.get(isSneak).generate()
-            location.pitch += up
-            location.yaw += side
-            player.teleport(location)
+            NMS.cameraRecoil(player, location.yaw + side, location.pitch + up)
         }
     }
 
     data class PlayerRecoil(
         val value: SneakOption.FloatValue
     ) {
-        val isEnable by lazy { value == default.playerRecoil.value }
+        val isEnable by lazy { value != default.playerRecoil.value }
     }
 
     data class CameraRecoil(
         val up: SneakOption.RandomFloatValue,
         val side: SneakOption.RandomFloatValue
     ) {
-        val isEnable by lazy { up == default.cameraRecoil.up && side == default.cameraRecoil.side }
+        val isEnable by lazy { up != default.cameraRecoil.up || side != default.cameraRecoil.side }
     }
 
     companion object {
