@@ -10,9 +10,9 @@ import me.syari.ss.tool.ConfigLoader.loadConfig
 import me.syari.ss.tool.ConfigLoader.loadMessage
 import me.syari.ss.tool.Main.Companion.toolPlugin
 import me.syari.ss.tool.item.SSTool
-import me.syari.ss.tool.item.SSTool.Companion.getToolId
-import me.syari.ss.tool.item.SSToolItem
-import me.syari.ss.tool.item.SSToolItem.Companion.getDurability
+import me.syari.ss.tool.item.SSTool.Companion.getDurability
+import me.syari.ss.tool.item.SSToolData
+import me.syari.ss.tool.item.SSToolData.Companion.getToolId
 import me.syari.ss.tool.item.attachment.gun.GunAttachment
 import me.syari.ss.tool.item.attachment.gun.GunAttachment.Companion.getCursor
 import org.bukkit.entity.Player
@@ -22,7 +22,7 @@ object CommandCreator : OnEnable {
         createCommand(toolPlugin, "tool", "Tool",
             tab { _, _ -> element("item", "get", "give", "reload") },
             tab("give") { _, _ -> onlinePlayers },
-            tab("get", "give *") { _, _ -> element(SSTool.idList) },
+            tab("get", "give *") { _, _ -> element(SSToolData.idList) },
             tab("reload") { _, _ -> element("item", "message") },
             tab("item") { _, _ -> element("info", "bullet", "durability") },
             tab("item bullet", "item durability") { _, _ -> element("set", "inc", "dec") },
@@ -31,7 +31,7 @@ object CommandCreator : OnEnable {
             when (args.whenIndex(0)) {
                 "item" -> {
                     if (sender !is Player) return@createCommand sendError(ErrorMessage.OnlyPlayer)
-                    val ssToolItem = SSToolItem.from(sender.inventory.itemInMainHand)
+                    val ssToolItem = SSTool.from(sender.inventory.itemInMainHand)
                         ?: return@createCommand sendWithPrefix("&c銃を持っていません")
                     val item = ssToolItem.item
                     when (args.whenIndex(1)) {
@@ -53,7 +53,7 @@ object CommandCreator : OnEnable {
                             when (args.whenIndex(2)) {
                                 "set" -> {
                                     val durability = args.getOrNull(3)?.let {
-                                        if (it.toLowerCase() == "max") ssToolItem.tool.maxDurability
+                                        if (it.toLowerCase() == "max") ssToolItem.data.maxDurability
                                         else it.toIntOrNull()
                                     } ?: return@createCommand sendWithPrefix("&c設定する耐久を入力してください")
                                     ssToolItem.durability = durability
@@ -81,7 +81,7 @@ object CommandCreator : OnEnable {
                         "bullet" -> {
                             val cursor = getCursor(ssToolItem)
                                 ?: return@createCommand sendWithPrefix("&c銃弾が選択されていません")
-                            val gunAttachment = ssToolItem.tool.attachments[cursor.dependencyAction] as? GunAttachment
+                            val gunAttachment = ssToolItem.data.attachments[cursor.dependencyAction] as? GunAttachment
                                 ?: return@createCommand sendWithPrefix("&c銃が取得できませんでした")
                             when (args.whenIndex(2)) {
                                 "set" -> {
@@ -123,13 +123,13 @@ object CommandCreator : OnEnable {
                 "get" -> {
                     if (sender !is Player) return@createCommand sendError(ErrorMessage.OnlyPlayer)
                     val id = args.getOrNull(1) ?: return@createCommand sendWithPrefix("&c銃のIDを入力してください")
-                    val ssToolItem = SSToolItem.get(id) ?: return@createCommand sendWithPrefix("&c存在しないIDです")
+                    val ssToolItem = SSTool.get(id) ?: return@createCommand sendWithPrefix("&c存在しないIDです")
                     ssToolItem.give(sender)
                 }
                 "give" -> {
                     val player = args.getPlayer(1, false) ?: return@createCommand
                     val id = args.getOrNull(2) ?: return@createCommand sendWithPrefix("&c銃のIDを入力してください")
-                    val ssToolItem = SSToolItem.get(id) ?: return@createCommand sendWithPrefix("&c存在しないIDです")
+                    val ssToolItem = SSTool.get(id) ?: return@createCommand sendWithPrefix("&c存在しないIDです")
                     ssToolItem.give(player)
                 }
                 "reload" -> {

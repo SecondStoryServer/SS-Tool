@@ -7,7 +7,7 @@ import me.syari.ss.core.config.CreateConfig.configDir
 import me.syari.ss.core.config.dataType.ConfigDataType
 import me.syari.ss.core.message.Message.send
 import me.syari.ss.tool.Main.Companion.toolPlugin
-import me.syari.ss.tool.item.SSTool
+import me.syari.ss.tool.item.SSToolData
 import me.syari.ss.tool.item.attachment.ToolAction
 import me.syari.ss.tool.item.attachment.base.Attachment
 import me.syari.ss.tool.item.attachment.gun.GunAttachment
@@ -22,7 +22,7 @@ object ConfigLoader : OnEnable {
     }
 
     fun loadConfig(output: CommandSender) {
-        SSTool.clearAll()
+        SSToolData.clearAll()
         AmmoOption.clearAllItem()
 
         configDir(toolPlugin, output, "Tool") {
@@ -41,9 +41,9 @@ object ConfigLoader : OnEnable {
                     }
                 }
             }
-            SSTool.register(id, type, name, lore, durability, attachments)
+            SSToolData.register(id, type, name, lore, durability, attachments)
         }
-        output.send("&b[Tool] &6銃を${SSTool.idList.size}個ロードしました")
+        output.send("&b[Tool] &6銃を${SSToolData.idList.size}個ロードしました")
 
         configDir(toolPlugin, output, "Ammo") {
             val id = fileName.substringBeforeLast(".yml")

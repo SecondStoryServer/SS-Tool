@@ -4,7 +4,7 @@ import me.syari.ss.core.config.CustomConfig
 import me.syari.ss.core.config.dataType.ConfigDataType
 import me.syari.ss.core.message.Message.action
 import me.syari.ss.tool.Main.Companion.toolPlugin
-import me.syari.ss.tool.item.SSToolItem
+import me.syari.ss.tool.item.SSTool
 import me.syari.ss.tool.item.attachment.ToolAction
 import me.syari.ss.tool.item.attachment.base.Attachment
 import me.syari.ss.tool.item.attachment.base.AttachmentLoader
@@ -34,9 +34,9 @@ class GunAttachment(
     private val recoilOption: RecoilOption,
     private val scopeOption: ScopeOption
 ) : Attachment {
-    fun shoot(player: Player, cursor: Cursor, ssToolItem: SSToolItem): Boolean {
+    fun shoot(player: Player, cursor: Cursor, ssTool: SSTool): Boolean {
         val isScope = ScopeOption.isUseScope(player)
-        val item = ssToolItem.item
+        val item = ssTool.item
         if (!shotOption.canShoot(player, isScope, item)) {
             return false
         }
@@ -44,14 +44,14 @@ class GunAttachment(
             player.action(Message.NoAmmo.message)
             return false
         }
-        val lastBullet = getBullet(ssToolItem, cursor)
+        val lastBullet = getBullet(ssTool, cursor)
         val useBullet = bulletOption.burstAmount
         if (lastBullet < useBullet) {
             player.action(Message.NoBullet.message)
             reloadOption.sound.empty?.play(player)
             return false
         } else {
-            reloadOption.setBullet(ssToolItem, cursor, lastBullet - useBullet)
+            reloadOption.setBullet(ssTool, cursor, lastBullet - useBullet)
         }
         val isSneak = player.isSneaking
         bulletOption.shoot(player, isSneak, isScope) { victim, bullet, isHeadShot ->
@@ -73,26 +73,26 @@ class GunAttachment(
         return true
     }
 
-    fun reload(player: Player, cursor: Cursor, ssToolItem: SSToolItem) {
+    fun reload(player: Player, cursor: Cursor, ssTool: SSTool) {
         if (ammoOption.isTimingReload) {
             if (!ammoOption.canConsume(player)) {
                 return player.action(Message.NoAmmo.message)
             }
             ammoOption.consume(player)
         }
-        reloadOption.reload(player, cursor, ssToolItem)
+        reloadOption.reload(player, cursor, ssTool)
     }
 
     fun scope(player: Player) {
         scopeOption.scope(player)
     }
 
-    fun setBullet(ssToolItem: SSToolItem, cursor: Cursor, bullet: Int) {
-        reloadOption.setBullet(ssToolItem, cursor, bullet)
+    fun setBullet(ssTool: SSTool, cursor: Cursor, bullet: Int) {
+        reloadOption.setBullet(ssTool, cursor, bullet)
     }
 
-    fun getBullet(ssToolItem: SSToolItem, cursor: Cursor): Int {
-        return reloadOption.getBullet(ssToolItem, cursor)
+    fun getBullet(ssTool: SSTool, cursor: Cursor): Int {
+        return reloadOption.getBullet(ssTool, cursor)
     }
 
     fun getMaxBullet(): Int {
@@ -133,20 +133,20 @@ class GunAttachment(
             BrokenGun("brokengun", "&4銃が壊れています")
         }
 
-        fun getCursor(ssToolItem: SSToolItem): Cursor? {
+        fun getCursor(ssTool: SSTool): Cursor? {
             val id =
-                ssToolItem.item.getPersistentData(toolPlugin)?.get(gunCursorPersistentKey, PersistentDataType.STRING)
+                ssTool.item.getPersistentData(toolPlugin)?.get(gunCursorPersistentKey, PersistentDataType.STRING)
             return Cursor.values().firstOrNull { it.internalId == id }
         }
 
-        fun setCursor(ssToolItem: SSToolItem, cursor: Cursor?) {
-            ssToolItem.item.editPersistentData(toolPlugin) {
+        fun setCursor(ssTool: SSTool, cursor: Cursor?) {
+            ssTool.item.editPersistentData(toolPlugin) {
                 set(gunCursorPersistentKey, PersistentDataType.STRING, cursor?.internalId)
             }
         }
 
-        fun getAttachment(ssToolItem: SSToolItem, cursor: Cursor): GunAttachment? {
-            return ssToolItem.tool.attachments[cursor.dependencyAction] as? GunAttachment
+        fun getAttachment(ssTool: SSTool, cursor: Cursor): GunAttachment? {
+            return ssTool.data.attachments[cursor.dependencyAction] as? GunAttachment
         }
     }
 

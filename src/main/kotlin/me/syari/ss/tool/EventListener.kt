@@ -2,7 +2,7 @@ package me.syari.ss.tool
 
 import me.syari.ss.core.auto.Event
 import me.syari.ss.core.message.Message.action
-import me.syari.ss.tool.item.SSToolItem
+import me.syari.ss.tool.item.SSTool
 import me.syari.ss.tool.item.attachment.ToolAction
 import me.syari.ss.tool.item.attachment.gun.GunAttachment
 import me.syari.ss.tool.item.attachment.gun.option.ReloadOption
@@ -21,7 +21,7 @@ object EventListener : Event {
     fun onUseGun(e: PlayerInteractEvent) {
         val action = e.action
         if (action == Action.PHYSICAL) return
-        val ssToolItem = SSToolItem.from(e.item) ?: return
+        val ssToolItem = SSTool.from(e.item) ?: return
         e.isCancelled = true
         val player = e.player
         if (ssToolItem.durability < 1) return player.action(GunAttachment.Companion.Message.BrokenGun.message)
@@ -70,7 +70,7 @@ object EventListener : Event {
 
     @EventHandler
     fun onGunReload(e: PlayerDropItemEvent) {
-        val ssToolItem = SSToolItem.from(e.itemDrop.itemStack) ?: return
+        val ssToolItem = SSTool.from(e.itemDrop.itemStack) ?: return
         e.isCancelled = true
         val cursor = GunAttachment.getCursor(ssToolItem) ?: return
         val attachment = GunAttachment.getAttachment(ssToolItem, cursor) ?: return
@@ -82,7 +82,7 @@ object EventListener : Event {
     fun onMeleeDamage(e: EntityDamageByEntityEvent) {
         val attacker = e.damager as? Player ?: return
         val victim = e.entity as? LivingEntity ?: return
-        val ssToolItem = SSToolItem.from(attacker.inventory.itemInMainHand) ?: return
+        val ssToolItem = SSTool.from(attacker.inventory.itemInMainHand) ?: return
         ssToolItem.runEvent(ToolAction.Melee) {
             if (it is MeleeAttachment) {
                 it.damage(victim)

@@ -9,7 +9,7 @@ import me.syari.ss.core.scheduler.CustomScheduler.runRepeatTimes
 import me.syari.ss.core.scheduler.CustomTask
 import me.syari.ss.core.sound.CustomSoundList
 import me.syari.ss.tool.Main.Companion.toolPlugin
-import me.syari.ss.tool.item.SSToolItem
+import me.syari.ss.tool.item.SSTool
 import me.syari.ss.tool.item.attachment.gun.GunAttachment
 import org.bukkit.entity.Player
 import org.bukkit.persistence.PersistentDataType
@@ -22,14 +22,14 @@ data class ReloadOption(
     val bar: Bar,
     val sound: Sound
 ) {
-    fun reload(player: Player, cursor: GunAttachment.Cursor, ssToolItem: SSToolItem) {
-        val lastBullet = getBullet(ssToolItem, cursor)
+    fun reload(player: Player, cursor: GunAttachment.Cursor, ssTool: SSTool) {
+        val lastBullet = getBullet(ssTool, cursor)
         val maxBullet = maxBullet
         if (lastBullet < maxBullet) {
             fun endReload() {
                 var bullet = lastBullet + onceBullet
                 if (maxBullet < bullet) bullet = maxBullet
-                setBullet(ssToolItem, cursor, bullet)
+                setBullet(ssTool, cursor, bullet)
                 sound.end?.play(player)
                 val endMessage = bar.endMessage
                 if (endMessage.isNotEmpty()) player.action(endMessage)
@@ -60,21 +60,21 @@ data class ReloadOption(
                 }
             }?.let { setReloadTask(player, it) }
         } else if (maxBullet < lastBullet) {
-            setBullet(ssToolItem, cursor, maxBullet)
+            setBullet(ssTool, cursor, maxBullet)
         }
     }
 
-    fun getBullet(ssToolItem: SSToolItem, cursor: GunAttachment.Cursor): Int {
-        return ssToolItem.item.getPersistentData(toolPlugin)
+    fun getBullet(ssTool: SSTool, cursor: GunAttachment.Cursor): Int {
+        return ssTool.item.getPersistentData(toolPlugin)
             ?.get(getBulletPersistentKey(cursor), PersistentDataType.INTEGER)
             ?: maxBullet
     }
 
-    fun setBullet(ssToolItem: SSToolItem, cursor: GunAttachment.Cursor, bullet: Int) {
-        ssToolItem.item.editPersistentData(toolPlugin) {
+    fun setBullet(ssTool: SSTool, cursor: GunAttachment.Cursor, bullet: Int) {
+        ssTool.item.editPersistentData(toolPlugin) {
             set(getBulletPersistentKey(cursor), PersistentDataType.INTEGER, bullet)
         }
-        ssToolItem.updateDisplayName()
+        ssTool.updateDisplayName()
     }
 
     data class Bar(
