@@ -1,0 +1,151 @@
+# ------------[ Tool ]------------
+# File: Tool/<item_id>.yml
+info:
+  type: <String:STONE> # Material
+  name: <String:item_id> # アイテム名
+  lore: <StringList:[]> # 説明文
+  durability: <Int:type.maxDurability> # 耐久度
+left: # 左クリックで使用
+  gun: # 射撃モード
+    wearout: <Int:1> # 耐久消費
+    bullet: # 弾
+      type: <{snow/arrow/item-MATERIAL/none}:snow> # 弾の種類 {雪玉/矢/アイテム-<Material>/透明}
+      burst:
+        amount: <Int:1> # 弾の数
+        delay: <Int:0> # 弾同士の間隔
+      speed: <Float:30> # 弾の速度
+      spread: # 集弾性
+        # base と sneak が 同じ場合は
+        # spread: <Int>
+        # と省略できます
+        base: <Int:0> # 基本
+        sneak: <Int:0> # しゃがみ時
+        scope: <Float:1> # スコープを覗いている場合 集弾性×[scope]
+      remove: <Int:100> # 一定時間経過後、弾が消える(tick)
+      particle: <Particle:[]> # 弾につけるパーティクル
+    shot: # 発射
+      scope: <Boolean:false> # true にするとスコープを覗かないと発射できなくなる
+      between: <Int:0> # 発射間隔(tick)
+      particle: <Particle:[]> # 発射時パーティクル
+      sound: <Sound:[]> # 発射音
+      potion: <Potion:[]> # 発射時ポーション効果
+    hit: # 被弾
+      damage: <Float:1> # ダメージ
+      particle: # 被弾時パーティクル
+        shooter: <Particle:[]>
+        victim: <Particle:[]>
+      sound: # 被弾音
+        shooter: <Sound:[]>
+        victim: <Sound:[]>
+      potion: # 被弾時ポーション効果
+        shooter: <Potion:[]>
+        victim: <Potion:[]>
+      head: # ヘッドショット
+        damage: <Float:1> # 与ダメージ=ダメージ量×[damage]
+        particle: # 被弾時パーティクル
+          shooter: <Particle:[]>
+          victim: <Particle:[]>
+        sound: # 被弾音
+          shooter: <Sound:[]>
+          victim: <Sound:[]>
+        potion: # 被弾時ポーション効果
+          shooter: <Potion:[]>
+          victim: <Potion:[]>
+      crit: # クリティカル
+        damage: <Float:1> # 与ダメージ=ダメージ量×[damage]
+        chance: <Float:0> # 確率 1.0 = 100%
+        particle: # 被弾時パーティクル
+          shooter: <Particle:[]>
+          victim: <Particle:[]>
+        sound: # 被弾音
+          shooter: <Sound:[]>
+          victim: <Sound:[]>
+        potion: # 被弾時ポーション効果
+          shooter: <Potion:[]>
+          victim: <Potion:[]>
+    reload: # リロード
+      bullet: # 弾
+        max: <Int:0> # 最大数 (0にすると無限になる)
+        once: <Int:0> # 一度にリロードする数 (0にすると一度で最大数になる)
+      duration: <Int:1> # リロードにかかる時間(tick)
+      delay: <Int:0> # リロード後、発射可能までの時間
+      bar: # リロードの進捗
+        style: <String:"${bar} &6${time}"> # 使える変数 ${bar}: バー ${time}s: 残り時間(秒)
+        left: <String:"&c|"> # バーの左側
+        right: <String:"&7|"> # バーの右側
+        amount: <Int:30> # バーの文字数
+        end: <String:"&6Reloaded"> # 終了時のメッセージ
+      sound:
+        empty: <Sound:[]> # 弾が0の状態で発射したときの音
+        begin: <Sound:[]> # リロードするときの音
+        end: <Sound:[]> # リロードが終わったときの音
+    ammo: # 弾薬
+      id: <String:""> # AmmoのID
+      timing: <{shot/reload}:reload> # 弾薬を消費するタイミング {発射/リロード}
+      amount: <Int:1> # 弾薬の消費数
+    recoil: # 反動
+      player: # プレイヤー自身が動きます
+        # base と sneak が同じ場合は
+        # player: <Float>
+        # と省略できます
+        base: <Float:0> # 基本
+        sneak: <Float:0> # しゃがみ時
+      camera: # 視点がブレます
+        # base と sneak が同じ場合は
+        #
+        # camera:
+        #   up: # 縦ブレ
+        #     max: <Float>
+        #     min: <Float>
+        #   side: # 横ブレ
+        #     max: <Float>
+        #     min: <Float>
+        #
+        # と省略できます
+        up: # 縦ブレ
+          base: # 基本
+            max: <Float:0>
+            min: <Float:0>
+          sneak: # しゃがみ時
+            max: <Float:0>
+            min: <Float:0>
+        side: # 横ブレ
+          base: # 基本
+            max: <Float:0>
+            min: <Float:0>
+          sneak: # しゃがみ時
+            max: <Float:0>
+            min: <Float:0>
+    scope: # スコープ
+      amount: <Int:0> # スコープ倍率
+      night: <Boolean:true> # スコープを覗いた時に暗視を付与する
+  melee: # 近接モード
+    damage: <Float>
+    wearout: <Int> # 耐久消費
+  shield: # 防御モード
+    protect: <Float> # 軽減率 与ダメージ=ダメージ量×[protect]
+    chance: <Float> # 確率 1.0 = 100%
+    wearout: <Int> # 耐久消費
+right: # 右クリックで使用
+# 設定は left と同様
+
+# --- 設定値 --- #
+# 「:」以降がデフォルト値で省略可能です
+#
+# String: # 文字列
+# StringList: # 文字列リスト
+# Int: # 整数
+# Float: # 実数
+# Boolean: # true/false
+# Particle:
+# - PARTICLE-SPEED-COUNT # PARTICLE: 種類 / SPEED: 速度<Int> / COUNT: 量<Int>
+# - REDSTONE-R-G-B-SPEED-COUNT # R/G/B: 色<Int>(0~255)
+# - delay-TICK # TICK: 待機時間<Int> これ以降のパーティクルを遅らせる
+# Sound:
+# - SOUND-VOLUME-PITCH # SOUND: 種類 / VOLUME: 音量<Float>(0.1~3.0) / PITCH: 音の高さ<Float>(0.0~2.0)
+# - SOUND-VOLUME-PITCH-AMOUNT # AMOUNT: 音を重ねます<Int> 同じものをコピーする必要はないです
+# - delay-TICK # TICK: 待機時間<Int> これ以降のサウンドを遅らせる
+# Potion:
+# - POTION-TIME-LEVEL # POTION: 種類 / TIME: 効果時間<Int> / LEVEL: 効果レベル<Int>
+# - POTION-TIME-LEVEL-PARTICLE # PARTICLE: パーティクルの有無<Boolean>
+#

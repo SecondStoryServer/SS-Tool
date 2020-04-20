@@ -4,7 +4,7 @@ plugins {
     id "org.jetbrains.kotlin.jvm" version "1.3.71"
 }
 
-group = "me.syari.ss.gun"
+group = "me.syari.ss.tool"
 version = "1.0"
 
 repositories {
