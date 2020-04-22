@@ -43,7 +43,7 @@ object EventListener : Event {
         val victim = e.entity as? LivingEntity ?: return
         val ssTool = SSTool.from(attacker.inventory.itemInMainHand) ?: return
         ssTool.data.meleeAttachment?.let {
-            it.damage(victim)
+            it.damage(attacker, victim)
             ssTool.durability -= it.wearOut
         }
     }
