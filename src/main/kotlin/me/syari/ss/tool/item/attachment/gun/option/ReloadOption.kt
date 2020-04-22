@@ -15,6 +15,7 @@ import org.bukkit.entity.Player
 import org.bukkit.persistence.PersistentDataType
 
 data class ReloadOption(
+    val clickType: ClickType,
     val maxBullet: Int,
     val onceBullet: Int,
     val duration: Int,
@@ -22,14 +23,14 @@ data class ReloadOption(
     val bar: Bar,
     val sound: Sound
 ) {
-    fun reload(player: Player, clickType: ClickType, ssTool: SSTool) {
-        val lastBullet = getBullet(ssTool, clickType)
+    fun reload(player: Player, ssTool: SSTool) {
+        val lastBullet = getBullet(ssTool)
         val maxBullet = maxBullet
         if (lastBullet < maxBullet) {
             fun endReload() {
                 var bullet = lastBullet + onceBullet
                 if (maxBullet < bullet) bullet = maxBullet
-                setBullet(ssTool, clickType, bullet)
+                setBullet(ssTool, bullet)
                 sound.end?.play(player)
                 val endMessage = bar.endMessage
                 if (endMessage.isNotEmpty()) player.action(endMessage)
@@ -60,17 +61,17 @@ data class ReloadOption(
                 }
             }?.let { setReloadTask(player, it) }
         } else if (maxBullet < lastBullet) {
-            setBullet(ssTool, clickType, maxBullet)
+            setBullet(ssTool, maxBullet)
         }
     }
 
-    fun getBullet(ssTool: SSTool, clickType: ClickType): Int {
+    fun getBullet(ssTool: SSTool): Int {
         return ssTool.item.getPersistentData(toolPlugin)
             ?.get(getBulletPersistentKey(clickType), PersistentDataType.INTEGER)
             ?: maxBullet
     }
 
-    fun setBullet(ssTool: SSTool, clickType: ClickType, bullet: Int) {
+    fun setBullet(ssTool: SSTool, bullet: Int) {
         ssTool.item.editPersistentData(toolPlugin) {
             set(getBulletPersistentKey(clickType), PersistentDataType.INTEGER, bullet)
         }
@@ -93,6 +94,7 @@ data class ReloadOption(
 
     companion object {
         private val default = ReloadOption(
+            ClickType.Left,
             0,
             0,
             1,
@@ -101,17 +103,17 @@ data class ReloadOption(
             Sound(null, null, null)
         )
 
-        fun getReloadOption(config: CustomConfig, section: String): ReloadOption {
+        fun getReloadOption(config: CustomConfig, section: String, clickType: ClickType): ReloadOption {
             if (!config.contains(section)) return default
             var maxBullet: Int? = null
             var onceBullet: Int? = null
-            if(config.contains("$section.bullet")){
+            if (config.contains("$section.bullet")) {
                 maxBullet = config.get("$section.bullet.max", ConfigDataType.INT, true)
                 onceBullet = config.get("$section.bullet.once", ConfigDataType.INT, false)
             }
-            if(maxBullet == null || maxBullet < 0) maxBullet = default.maxBullet
-            if(onceBullet == null || onceBullet < 0) onceBullet = default.onceBullet
-            val bar = if(config.contains("$section.bar")){
+            if (maxBullet == null || maxBullet < 0) maxBullet = default.maxBullet
+            if (onceBullet == null || onceBullet < 0) onceBullet = default.onceBullet
+            val bar = if (config.contains("$section.bar")) {
                 with(default.bar){
                     Bar(
                         config.get("$section.bar.style", ConfigDataType.STRING, style, false),
@@ -134,6 +136,7 @@ data class ReloadOption(
                 default.sound
             }
             return ReloadOption(
+                clickType,
                 maxBullet,
                 onceBullet,
                 config.get("$section.duration", ConfigDataType.INT, default.duration, true),

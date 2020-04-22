@@ -56,19 +56,16 @@ object CommandCreator : OnEnable {
                                         else it.toIntOrNull()
                                     } ?: return@createCommand sendWithPrefix("&c設定する耐久を入力してください")
                                     ssTool.durability = durability
-                                    ssTool.updateDurability()
                                 }
                                 "inc" -> {
                                     val durability = args.getOrNull(3)?.toIntOrNull()
                                         ?: return@createCommand sendWithPrefix("&c加算する耐久を入力してください")
                                     ssTool.durability += durability
-                                    ssTool.updateDurability()
                                 }
                                 "dec" -> {
                                     val durability = args.getOrNull(3)?.toIntOrNull()
                                         ?: return@createCommand sendWithPrefix("&c減算する耐久を入力してください")
                                     ssTool.durability -= durability
-                                    ssTool.updateDurability()
                                 }
                                 else -> sendHelp(
                                     "tool item durability set" to "アイテムの耐久を設定します",

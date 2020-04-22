@@ -6,6 +6,13 @@ enum class ClickType(val internalId: String) {
     Right("right"),
     Left("left");
 
+    val inverse by lazy {
+        when (this) {
+            Right -> Left
+            Left -> Right
+        }
+    }
+
     companion object {
         fun from(action: Action): ClickType? {
             return when (action) {
