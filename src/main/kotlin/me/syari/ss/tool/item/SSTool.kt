@@ -12,8 +12,12 @@ import org.bukkit.persistence.PersistentDataType
 
 class SSTool(val item: CustomItemStack, val data: SSToolData) {
     var durability = getDurability(item) ?: data.maxDurability
+        set(value) {
+            field = value
+            updateDurability()
+        }
 
-    fun updateDurability() {
+    private fun updateDurability() {
         item.editPersistentData(toolPlugin) {
             set(gunDurabilityPersistentKey, PersistentDataType.INTEGER, durability)
         }
@@ -24,7 +28,7 @@ class SSTool(val item: CustomItemStack, val data: SSToolData) {
         item.display = buildString {
             append(data.name)
             val (left, right) = ClickType.values().map { type ->
-                type to data.clickAction[type]?.getText(type, this@SSTool)
+                type to data.clickAction[type]?.getText(this@SSTool)
             }.toMap().let {
                 it[ClickType.Left] to it[ClickType.Right]
             }
@@ -48,8 +52,6 @@ class SSTool(val item: CustomItemStack, val data: SSToolData) {
     }
 
     private fun give(player: Player, orDrop: Boolean) {
-        updateDisplayName()
-        updateDurability()
         if (orDrop) {
             player.giveOrDrop(item)
         } else {
