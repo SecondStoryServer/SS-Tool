@@ -7,6 +7,8 @@ import me.syari.ss.tool.item.attachment.gun.GunAttachment
 import me.syari.ss.tool.item.attachment.melee.MeleeAttachment
 import me.syari.ss.tool.item.attachment.shield.ShieldAttachment
 import org.bukkit.Material
+import org.bukkit.enchantments.Enchantment
+import org.bukkit.inventory.ItemFlag
 import org.bukkit.inventory.ItemStack
 import org.bukkit.persistence.PersistentDataType
 
@@ -16,6 +18,8 @@ class SSToolData(
     val name: String,
     val lore: List<String>,
     val maxDurability: Int,
+    val itemFlag: List<ItemFlag>?,
+    val enchant: Map<Enchantment, Int>?,
     val gunAttachments: Map<ClickType, GunAttachment>,
     val meleeAttachment: MeleeAttachment?,
     val shieldAttachments: Map<ClickType, ShieldAttachment>
@@ -23,6 +27,12 @@ class SSToolData(
     fun create() = SSTool(CustomItemStack.create(type, name, lore).apply {
         editPersistentData(toolPlugin) {
             set(toolIdPersistentKey, PersistentDataType.STRING, id)
+        }
+        itemFlag?.let {
+            addItemFlag(*it.toTypedArray())
+        }
+        enchant?.forEach { enchant, level ->
+            addEnchant(enchant, level)
         }
     }, this)
 
@@ -46,9 +56,11 @@ class SSToolData(
         fun register(
             id: String,
             type: Material,
-            name: String,
+            name: String?,
             lore: List<String>,
-            maxDurability: Int,
+            maxDurability: Int?,
+            itemFlag: List<ItemFlag>?,
+            enchant: Map<Enchantment, Int>?,
             gunAttachments: Map<ClickType, GunAttachment>?,
             meleeAttachment: MeleeAttachment?,
             shieldAttachments: Map<ClickType, ShieldAttachment>?
@@ -56,9 +68,11 @@ class SSToolData(
             toolList[id.toLowerCase()] = SSToolData(
                 id,
                 type,
-                name,
+                name ?: "&b$id",
                 lore,
-                maxDurability,
+                maxDurability ?: type.maxDurability.toInt(),
+                itemFlag,
+                enchant,
                 gunAttachments ?: mapOf(),
                 meleeAttachment,
                 shieldAttachments ?: mapOf()

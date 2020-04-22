@@ -6,9 +6,9 @@ import me.syari.ss.core.command.create.CreateCommand.element
 import me.syari.ss.core.command.create.CreateCommand.onlinePlayers
 import me.syari.ss.core.command.create.CreateCommand.tab
 import me.syari.ss.core.command.create.ErrorMessage
-import me.syari.ss.tool.ConfigLoader.loadConfig
-import me.syari.ss.tool.ConfigLoader.loadMessage
 import me.syari.ss.tool.Main.Companion.toolPlugin
+import me.syari.ss.tool.config.ConfigLoader.loadConfig
+import me.syari.ss.tool.config.ConfigLoader.loadMessage
 import me.syari.ss.tool.item.SSTool
 import me.syari.ss.tool.item.SSTool.Companion.getDurability
 import me.syari.ss.tool.item.SSToolData

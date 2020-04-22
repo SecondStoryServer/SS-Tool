@@ -1,4 +1,4 @@
-package me.syari.ss.tool
+package me.syari.ss.tool.config
 
 import me.syari.ss.core.Main.Companion.console
 import me.syari.ss.core.auto.OnEnable
@@ -7,6 +7,8 @@ import me.syari.ss.core.config.CreateConfig.configDir
 import me.syari.ss.core.config.dataType.ConfigDataType
 import me.syari.ss.core.message.Message.send
 import me.syari.ss.tool.Main.Companion.toolPlugin
+import me.syari.ss.tool.config.dataType.ConfigEnchantListDataType
+import me.syari.ss.tool.config.dataType.ConfigItemFlagListDataType
 import me.syari.ss.tool.item.SSToolData
 import me.syari.ss.tool.item.attachment.gun.GunAttachment
 import me.syari.ss.tool.item.attachment.gun.option.AmmoOption
@@ -26,15 +28,18 @@ object ConfigLoader : OnEnable {
         AmmoOption.clearAllItem()
 
         configDir(toolPlugin, output, "Tool") {
-            val id = fileName.substringBeforeLast(".yml")
-            val type = get("info.type", ConfigDataType.MATERIAL, Material.STONE, false)
-            val name = get("info.name", ConfigDataType.STRING, "&b$id", true)
-            val lore = get("info.lore", ConfigDataType.STRINGLIST, listOf(), false)
-            val durability = get("info.durability", ConfigDataType.INT, type.maxDurability.toInt(), true)
-            val gunAttachments = GunAttachment.loadAll(this)
-            val meleeAttachment = MeleeAttachment.load(this)
-            val shieldAttachments = ShieldAttachment.loadAll(this)
-            SSToolData.register(id, type, name, lore, durability, gunAttachments, meleeAttachment, shieldAttachments)
+            SSToolData.register(
+                fileName.substringBeforeLast(".yml"),
+                get("info.type", ConfigDataType.MATERIAL, Material.STONE, false),
+                get("info.name", ConfigDataType.STRING, true),
+                get("info.lore", ConfigDataType.STRINGLIST, listOf(), false),
+                get("info.durability", ConfigDataType.INT, true),
+                get("info.itemflag", ConfigItemFlagListDataType, false),
+                get("info.enchant", ConfigEnchantListDataType, false),
+                GunAttachment.loadAll(this),
+                MeleeAttachment.load(this),
+                ShieldAttachment.loadAll(this)
+            )
         }
         output.send("&b[Tool] &6銃を${SSToolData.idList.size}個ロードしました")
 
