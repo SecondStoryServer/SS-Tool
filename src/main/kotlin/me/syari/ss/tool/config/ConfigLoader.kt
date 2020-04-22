@@ -10,6 +10,8 @@ import me.syari.ss.tool.Main.Companion.toolPlugin
 import me.syari.ss.tool.config.dataType.ConfigEnchantListDataType
 import me.syari.ss.tool.config.dataType.ConfigItemFlagListDataType
 import me.syari.ss.tool.item.SSToolData
+import me.syari.ss.tool.item.attachment.ClickAction
+import me.syari.ss.tool.item.attachment.ClickType
 import me.syari.ss.tool.item.attachment.gun.GunAttachment
 import me.syari.ss.tool.item.attachment.gun.option.AmmoOption
 import me.syari.ss.tool.item.attachment.melee.MeleeAttachment
@@ -28,6 +30,17 @@ object ConfigLoader : OnEnable {
         AmmoOption.clearAllItem()
 
         configDir(toolPlugin, output, "Tool") {
+            val clickAction = mutableMapOf<ClickType, ClickAction>()
+            GunAttachment.loadAll(this)?.forEach { clickType, action ->
+                clickAction[clickType] = action
+            }
+            ShieldAttachment.loadAll(this)?.forEach { clickType, action ->
+                if (clickAction.containsKey(clickType)) {
+                    sendError("shield.${clickType.internalId}", "既に登録されたアクションがあります")
+                } else {
+                    clickAction[clickType] = action
+                }
+            }
             SSToolData.register(
                 fileName.substringBeforeLast(".yml"),
                 get("info.type", ConfigDataType.MATERIAL, Material.STONE, false),
@@ -36,12 +49,11 @@ object ConfigLoader : OnEnable {
                 get("info.durability", ConfigDataType.INT, true),
                 get("info.itemflag", ConfigItemFlagListDataType, false),
                 get("info.enchant", ConfigEnchantListDataType, false),
-                GunAttachment.loadAll(this),
-                MeleeAttachment.load(this),
-                ShieldAttachment.loadAll(this)
+                clickAction,
+                MeleeAttachment.load(this)
             )
         }
-        output.send("&b[Tool] &6銃を${SSToolData.idList.size}個ロードしました")
+        output.send("&b[Tool] &6ツールを${SSToolData.idList.size}個ロードしました")
 
         configDir(toolPlugin, output, "Ammo") {
             val id = fileName.substringBeforeLast(".yml")
@@ -54,7 +66,7 @@ object ConfigLoader : OnEnable {
 
     fun loadMessage(output: CommandSender){
         config(toolPlugin, output, "message.yml") {
-            GunAttachment.loadMessage(this, "gun")
+            GunAttachment.loadMessage(this)
         }
     }
 }

@@ -2,10 +2,9 @@ package me.syari.ss.tool.item
 
 import me.syari.ss.core.item.CustomItemStack
 import me.syari.ss.tool.Main.Companion.toolPlugin
+import me.syari.ss.tool.item.attachment.ClickAction
 import me.syari.ss.tool.item.attachment.ClickType
-import me.syari.ss.tool.item.attachment.gun.GunAttachment
 import me.syari.ss.tool.item.attachment.melee.MeleeAttachment
-import me.syari.ss.tool.item.attachment.shield.ShieldAttachment
 import org.bukkit.Material
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.inventory.ItemFlag
@@ -20,9 +19,8 @@ class SSToolData(
     val maxDurability: Int,
     val itemFlag: List<ItemFlag>?,
     val enchant: Map<Enchantment, Int>?,
-    val gunAttachments: Map<ClickType, GunAttachment>,
-    val meleeAttachment: MeleeAttachment?,
-    val shieldAttachments: Map<ClickType, ShieldAttachment>
+    val clickAction: Map<ClickType, ClickAction>,
+    val meleeAttachment: MeleeAttachment?
 ) {
     fun create() = SSTool(CustomItemStack.create(type, name, lore).apply {
         editPersistentData(toolPlugin) {
@@ -61,9 +59,8 @@ class SSToolData(
             maxDurability: Int?,
             itemFlag: List<ItemFlag>?,
             enchant: Map<Enchantment, Int>?,
-            gunAttachments: Map<ClickType, GunAttachment>?,
-            meleeAttachment: MeleeAttachment?,
-            shieldAttachments: Map<ClickType, ShieldAttachment>?
+            clickAction: Map<ClickType, ClickAction>?,
+            meleeAttachment: MeleeAttachment?
         ) {
             toolList[id.toLowerCase()] = SSToolData(
                 id,
@@ -73,9 +70,8 @@ class SSToolData(
                 maxDurability ?: type.maxDurability.toInt(),
                 itemFlag,
                 enchant,
-                gunAttachments ?: mapOf(),
-                meleeAttachment,
-                shieldAttachments ?: mapOf()
+                clickAction ?: mapOf(),
+                meleeAttachment
             )
         }
 

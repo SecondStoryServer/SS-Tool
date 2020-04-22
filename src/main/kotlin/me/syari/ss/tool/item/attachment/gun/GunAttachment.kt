@@ -6,6 +6,7 @@ import me.syari.ss.core.message.Message.action
 import me.syari.ss.tool.Main.Companion.toolPlugin
 import me.syari.ss.tool.item.SSTool
 import me.syari.ss.tool.item.attachment.AttachmentLoader.getWearOut
+import me.syari.ss.tool.item.attachment.ClickAction
 import me.syari.ss.tool.item.attachment.ClickType
 import me.syari.ss.tool.item.attachment.gun.option.*
 import me.syari.ss.tool.item.attachment.gun.option.AmmoOption.Companion.getAmmoOption
@@ -32,8 +33,35 @@ class GunAttachment(
     private val ammoOption: AmmoOption,
     private val recoilOption: RecoilOption,
     private val scopeOption: ScopeOption
-) {
-    fun shoot(player: Player, clickType: ClickType, ssTool: SSTool): Boolean {
+) : ClickAction {
+    override fun getText(clickType: ClickType, ssTool: SSTool): String {
+        return getBullet(ssTool, clickType).toString()
+    }
+
+    override fun click(
+        player: Player,
+        clickType: ClickType,
+        ssTool: SSTool
+    ) {
+        val attachmentCursor = getCursor(ssTool)
+        if (attachmentCursor == clickType) {
+            val isSuccess = shoot(player, clickType, ssTool)
+            if (isSuccess) {
+                ssTool.durability -= wearOut
+                ssTool.updateDurability()
+            }
+        } else if (player.isSneaking) {
+            if (attachmentCursor != null) scope(player)
+        } else {
+            switch(player, ssTool, clickType)
+        }
+    }
+
+    override fun drop(player: Player, clickType: ClickType, ssTool: SSTool) {
+        reload(player, clickType, ssTool)
+    }
+
+    private fun shoot(player: Player, clickType: ClickType, ssTool: SSTool): Boolean {
         val isScope = ScopeOption.isUseScope(player)
         val item = ssTool.item
         if (!shotOption.canShoot(player, isScope, item)) {
@@ -82,7 +110,7 @@ class GunAttachment(
         reloadOption.reload(player, clickType, ssTool)
     }
 
-    fun scope(player: Player) {
+    private fun scope(player: Player) {
         scopeOption.scope(player)
     }
 
@@ -90,7 +118,7 @@ class GunAttachment(
         reloadOption.setBullet(ssTool, clickType, bullet)
     }
 
-    fun getBullet(ssTool: SSTool, clickType: ClickType): Int {
+    private fun getBullet(ssTool: SSTool, clickType: ClickType): Int {
         return reloadOption.getBullet(ssTool, clickType)
     }
 
@@ -99,19 +127,19 @@ class GunAttachment(
     }
 
     companion object {
-        const val gunCursorPersistentKey = "ss-tool-gun-cursor"
+        private const val gunCursorPersistentKey = "ss-tool-gun-cursor"
 
-        fun loadMessage(config: CustomConfig, section: String) {
+        fun loadMessage(config: CustomConfig) {
             config.with {
                 var editNum = 0
                 Message.values().forEach {
-                    val path = "$section.${it.configPath}"
+                    val path = "gun.${it.configPath}"
                     val getValue = get(path, ConfigDataType.STRING, false)
                     if (getValue != null) {
                         it.message = getValue
                     } else {
                         set(path, it.message)
-                        editNum ++
+                        editNum++
                     }
                 }
                 if(0 < editNum) {

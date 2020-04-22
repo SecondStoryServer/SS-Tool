@@ -4,8 +4,8 @@ import me.syari.ss.core.item.CustomItemStack
 import me.syari.ss.core.item.ItemStackPlus.give
 import me.syari.ss.core.item.ItemStackPlus.giveOrDrop
 import me.syari.ss.tool.Main.Companion.toolPlugin
+import me.syari.ss.tool.item.attachment.ClickAction.Companion.getCursor
 import me.syari.ss.tool.item.attachment.ClickType
-import me.syari.ss.tool.item.attachment.gun.GunAttachment
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import org.bukkit.persistence.PersistentDataType
@@ -23,24 +23,25 @@ class SSTool(val item: CustomItemStack, val data: SSToolData) {
     fun updateDisplayName() {
         item.display = buildString {
             append(data.name)
-            val leftGun = data.gunAttachments[ClickType.Left]
-            val rightGun = data.gunAttachments[ClickType.Right]
-            val leftGunBullet = leftGun?.getBullet(this@SSTool, ClickType.Left)
-            val rightGunBullet = rightGun?.getBullet(this@SSTool, ClickType.Right)
+            val (left, right) = ClickType.values().map { type ->
+                type to data.clickAction[type]?.getText(type, this@SSTool)
+            }.toMap().let {
+                it[ClickType.Left] to it[ClickType.Right]
+            }
             when {
-                leftGunBullet != null && rightGunBullet != null -> {
-                    val cursor = when (GunAttachment.getCursor(this@SSTool)) {
+                left != null && right != null -> {
+                    val cursor = when (getCursor(this@SSTool)) {
                         ClickType.Right -> "◁▶"
                         ClickType.Left -> "◀▷"
                         else -> "◁▷"
                     }
-                    append("  《 $leftGunBullet $cursor $rightGunBullet 》")
+                    append("  《 $left $cursor $right 》")
                 }
-                leftGunBullet != null -> {
-                    append("  《 $leftGunBullet 》")
+                left != null -> {
+                    append("  《 $left 》")
                 }
-                rightGunBullet != null -> {
-                    append("  《 $rightGunBullet 》")
+                right != null -> {
+                    append("  《 $right 》")
                 }
             }
         }

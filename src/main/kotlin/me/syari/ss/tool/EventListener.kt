@@ -19,51 +19,32 @@ object EventListener : Event {
     fun onUseGun(e: PlayerInteractEvent) {
         val action = e.action
         if (action == Action.PHYSICAL) return
-        val ssToolItem = SSTool.from(e.item) ?: return
+        val ssTool = SSTool.from(e.item) ?: return
         e.isCancelled = true
         val player = e.player
-        if (ssToolItem.durability < 1) return player.action(GunAttachment.Companion.Message.BrokenGun.message)
+        if (ssTool.durability < 1) return player.action(GunAttachment.Companion.Message.BrokenGun.message)
         val clickType = ClickType.from(action) ?: return
-        ssToolItem.data.gunAttachments[clickType]?.let {
-            val attachmentCursor = GunAttachment.getCursor(ssToolItem)
-            if (attachmentCursor == clickType) {
-                val isSuccess = it.shoot(player, clickType, ssToolItem)
-                if (isSuccess) {
-                    ssToolItem.durability -= it.wearOut
-                    ssToolItem.updateDurability()
-                }
-            } else if (player.isSneaking) {
-                if (attachmentCursor != null) it.scope(player)
-            } else {
-                ReloadOption.cancelReload(player)
-                GunAttachment.setCursor(ssToolItem, clickType)
-                ssToolItem.updateDisplayName()
-            }
-        }
-        ssToolItem.data.shieldAttachments[clickType]?.let {
-
-        }
+        ssTool.data.clickAction[clickType]?.click(player, clickType, ssTool)
     }
 
     @EventHandler
     fun onGunReload(e: PlayerDropItemEvent) {
-        val ssToolItem = SSTool.from(e.itemDrop.itemStack) ?: return
+        val ssTool = SSTool.from(e.itemDrop.itemStack) ?: return
         e.isCancelled = true
-        val cursor = GunAttachment.getCursor(ssToolItem) ?: return
-        val attachment = ssToolItem.data.gunAttachments[cursor] ?: return
+        val cursor = GunAttachment.getCursor(ssTool) ?: return
         val player = e.player
-        attachment.reload(player, cursor, ssToolItem)
+        ssTool.data.clickAction[cursor]?.drop(player, cursor, ssTool)
     }
 
     @EventHandler
     fun onMeleeDamage(e: EntityDamageByEntityEvent) {
         val attacker = e.damager as? Player ?: return
         val victim = e.entity as? LivingEntity ?: return
-        val ssToolItem = SSTool.from(attacker.inventory.itemInMainHand) ?: return
-        ssToolItem.data.meleeAttachment?.let {
+        val ssTool = SSTool.from(attacker.inventory.itemInMainHand) ?: return
+        ssTool.data.meleeAttachment?.let {
             it.damage(victim)
-            ssToolItem.durability -= it.wearOut
-            ssToolItem.updateDurability()
+            ssTool.durability -= it.wearOut
+            ssTool.updateDurability()
         }
     }
 
