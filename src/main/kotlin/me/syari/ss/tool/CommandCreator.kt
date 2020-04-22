@@ -13,7 +13,6 @@ import me.syari.ss.tool.item.SSTool
 import me.syari.ss.tool.item.SSTool.Companion.getDurability
 import me.syari.ss.tool.item.SSToolData
 import me.syari.ss.tool.item.SSToolData.Companion.getToolId
-import me.syari.ss.tool.item.attachment.gun.GunAttachment
 import me.syari.ss.tool.item.attachment.gun.GunAttachment.Companion.getCursor
 import org.bukkit.entity.Player
 
@@ -81,7 +80,7 @@ object CommandCreator : OnEnable {
                         "bullet" -> {
                             val cursor = getCursor(ssToolItem)
                                 ?: return@createCommand sendWithPrefix("&c銃弾が選択されていません")
-                            val gunAttachment = ssToolItem.data.attachments[cursor.dependencyAction] as? GunAttachment
+                            val gunAttachment = ssToolItem.data.gunAttachments[cursor]
                                 ?: return@createCommand sendWithPrefix("&c銃が取得できませんでした")
                             when (args.whenIndex(2)) {
                                 "set" -> {

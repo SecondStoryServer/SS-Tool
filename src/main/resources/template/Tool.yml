@@ -5,8 +5,9 @@ info:
   name: <String:item_id> # アイテム名
   lore: <StringList:[]> # 説明文
   durability: <Int:type.maxDurability> # 耐久度
-left: # 左クリックで使用
-  gun: # 射撃モード
+gun: # 射撃モード
+  left: # 左クリックで使用
+  right: # 右クリックで使用
     wearout: <Int:1> # 耐久消費
     bullet: # 弾
       type: <{snow/arrow/item-MATERIAL/none}:snow> # 弾の種類 {雪玉/矢/アイテム-<Material>/透明}
@@ -119,14 +120,15 @@ left: # 左クリックで使用
     scope: # スコープ
       amount: <Int:0> # スコープ倍率
       night: <Boolean:true> # スコープを覗いた時に暗視を付与する
-  melee: # 近接モード
-    damage: <Float>
-    wearout: <Int> # 耐久消費
-  shield: # 防御モード
+melee: # 近接モード
+  damage: <Float>
+  wearout: <Int> # 耐久消費
+shield: # 防御モード
+  left: # 左クリックで使用
+  right: # 右クリックで使用
     protect: <Float> # 軽減率 与ダメージ=ダメージ量×[protect]
     chance: <Float> # 確率 1.0 = 100%
     wearout: <Int> # 耐久消費
-right: # 右クリックで使用
 # 設定は left と同様
 
 # --- 設定値 --- #

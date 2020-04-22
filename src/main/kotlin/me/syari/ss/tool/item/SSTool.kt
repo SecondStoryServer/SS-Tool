@@ -4,8 +4,7 @@ import me.syari.ss.core.item.CustomItemStack
 import me.syari.ss.core.item.ItemStackPlus.give
 import me.syari.ss.core.item.ItemStackPlus.giveOrDrop
 import me.syari.ss.tool.Main.Companion.toolPlugin
-import me.syari.ss.tool.item.attachment.ToolAction
-import me.syari.ss.tool.item.attachment.base.Attachment
+import me.syari.ss.tool.item.attachment.ClickType
 import me.syari.ss.tool.item.attachment.gun.GunAttachment
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
@@ -21,22 +20,18 @@ class SSTool(val item: CustomItemStack, val data: SSToolData) {
         item.damage = item.type.maxDurability - ((durability * item.type.maxDurability) / data.maxDurability)
     }
 
-    fun runEvent(toolAction: ToolAction, run: (Attachment) -> Unit) {
-        data.attachments[toolAction]?.let(run)
-    }
-
     fun updateDisplayName() {
         item.display = buildString {
             append(data.name)
-            val leftGun = data.attachments[ToolAction.ShootLeft] as? GunAttachment
-            val rightGun = data.attachments[ToolAction.ShootRight] as? GunAttachment
-            val leftGunBullet = leftGun?.getBullet(this@SSTool, GunAttachment.Cursor.Left)
-            val rightGunBullet = rightGun?.getBullet(this@SSTool, GunAttachment.Cursor.Right)
+            val leftGun = data.gunAttachments[ClickType.Left]
+            val rightGun = data.gunAttachments[ClickType.Right]
+            val leftGunBullet = leftGun?.getBullet(this@SSTool, ClickType.Left)
+            val rightGunBullet = rightGun?.getBullet(this@SSTool, ClickType.Right)
             when {
                 leftGunBullet != null && rightGunBullet != null -> {
                     val cursor = when (GunAttachment.getCursor(this@SSTool)) {
-                        GunAttachment.Cursor.Right -> "◁▶"
-                        GunAttachment.Cursor.Left -> "◀▷"
+                        ClickType.Right -> "◁▶"
+                        ClickType.Left -> "◀▷"
                         else -> "◁▷"
                     }
                     append("  《 $leftGunBullet $cursor $rightGunBullet 》")

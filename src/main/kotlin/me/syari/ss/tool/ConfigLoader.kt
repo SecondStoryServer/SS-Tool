@@ -8,10 +8,10 @@ import me.syari.ss.core.config.dataType.ConfigDataType
 import me.syari.ss.core.message.Message.send
 import me.syari.ss.tool.Main.Companion.toolPlugin
 import me.syari.ss.tool.item.SSToolData
-import me.syari.ss.tool.item.attachment.ToolAction
-import me.syari.ss.tool.item.attachment.base.Attachment
 import me.syari.ss.tool.item.attachment.gun.GunAttachment
 import me.syari.ss.tool.item.attachment.gun.option.AmmoOption
+import me.syari.ss.tool.item.attachment.melee.MeleeAttachment
+import me.syari.ss.tool.item.attachment.shield.ShieldAttachment
 import org.bukkit.Material
 import org.bukkit.command.CommandSender
 
@@ -31,17 +31,10 @@ object ConfigLoader : OnEnable {
             val name = get("info.name", ConfigDataType.STRING, "&b$id", true)
             val lore = get("info.lore", ConfigDataType.STRINGLIST, listOf(), false)
             val durability = get("info.durability", ConfigDataType.INT, type.maxDurability.toInt(), true)
-            val attachments = mutableMapOf<ToolAction, Attachment>().also { map ->
-                ToolAction.values().forEach { action ->
-                    val section = action.configSection
-                    if (this@configDir.contains(section)) {
-                        action.attachmentLoader.objectInstance?.get(this@configDir, section)?.let {
-                            map[action] = it
-                        }
-                    }
-                }
-            }
-            SSToolData.register(id, type, name, lore, durability, attachments)
+            val gunAttachments = GunAttachment.loadAll(this)
+            val meleeAttachment = MeleeAttachment.load(this)
+            val shieldAttachments = ShieldAttachment.loadAll(this)
+            SSToolData.register(id, type, name, lore, durability, gunAttachments, meleeAttachment, shieldAttachments)
         }
         output.send("&b[Tool] &6銃を${SSToolData.idList.size}個ロードしました")
 

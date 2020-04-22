@@ -5,9 +5,7 @@ import me.syari.ss.core.config.dataType.ConfigDataType
 import me.syari.ss.core.message.Message.action
 import me.syari.ss.tool.Main.Companion.toolPlugin
 import me.syari.ss.tool.item.SSTool
-import me.syari.ss.tool.item.attachment.ToolAction
-import me.syari.ss.tool.item.attachment.base.Attachment
-import me.syari.ss.tool.item.attachment.base.AttachmentLoader
+import me.syari.ss.tool.item.attachment.ClickType
 import me.syari.ss.tool.item.attachment.gun.option.*
 import me.syari.ss.tool.item.attachment.gun.option.AmmoOption.Companion.getAmmoOption
 import me.syari.ss.tool.item.attachment.gun.option.BulletOption.Companion.getBulletOption
@@ -23,7 +21,7 @@ import org.bukkit.persistence.PersistentDataType
 import kotlin.random.Random
 
 class GunAttachment(
-    override val wearOut: Int,
+    val wearOut: Int,
     private val bulletOption: BulletOption,
     private val shotOption: ShotOption,
     private val hitOptionBase: HitOption.Base,
@@ -33,8 +31,8 @@ class GunAttachment(
     private val ammoOption: AmmoOption,
     private val recoilOption: RecoilOption,
     private val scopeOption: ScopeOption
-) : Attachment {
-    fun shoot(player: Player, cursor: Cursor, ssTool: SSTool): Boolean {
+) {
+    fun shoot(player: Player, clickType: ClickType, ssTool: SSTool): Boolean {
         val isScope = ScopeOption.isUseScope(player)
         val item = ssTool.item
         if (!shotOption.canShoot(player, isScope, item)) {
@@ -44,14 +42,14 @@ class GunAttachment(
             player.action(Message.NoAmmo.message)
             return false
         }
-        val lastBullet = getBullet(ssTool, cursor)
+        val lastBullet = getBullet(ssTool, clickType)
         val useBullet = bulletOption.burstAmount
         if (lastBullet < useBullet) {
             player.action(Message.NoBullet.message)
             reloadOption.sound.empty?.play(player)
             return false
         } else {
-            reloadOption.setBullet(ssTool, cursor, lastBullet - useBullet)
+            reloadOption.setBullet(ssTool, clickType, lastBullet - useBullet)
         }
         val isSneak = player.isSneaking
         bulletOption.shoot(player, isSneak, isScope) { victim, bullet, isHeadShot ->
@@ -73,35 +71,30 @@ class GunAttachment(
         return true
     }
 
-    fun reload(player: Player, cursor: Cursor, ssTool: SSTool) {
+    fun reload(player: Player, clickType: ClickType, ssTool: SSTool) {
         if (ammoOption.isTimingReload) {
             if (!ammoOption.canConsume(player)) {
                 return player.action(Message.NoAmmo.message)
             }
             ammoOption.consume(player)
         }
-        reloadOption.reload(player, cursor, ssTool)
+        reloadOption.reload(player, clickType, ssTool)
     }
 
     fun scope(player: Player) {
         scopeOption.scope(player)
     }
 
-    fun setBullet(ssTool: SSTool, cursor: Cursor, bullet: Int) {
-        reloadOption.setBullet(ssTool, cursor, bullet)
+    fun setBullet(ssTool: SSTool, clickType: ClickType, bullet: Int) {
+        reloadOption.setBullet(ssTool, clickType, bullet)
     }
 
-    fun getBullet(ssTool: SSTool, cursor: Cursor): Int {
-        return reloadOption.getBullet(ssTool, cursor)
+    fun getBullet(ssTool: SSTool, clickType: ClickType): Int {
+        return reloadOption.getBullet(ssTool, clickType)
     }
 
     fun getMaxBullet(): Int {
         return reloadOption.maxBullet
-    }
-
-    enum class Cursor(val internalId: String, val dependencyAction: ToolAction) {
-        Right("right", ToolAction.ShootRight),
-        Left("left", ToolAction.ShootLeft)
     }
 
     companion object {
@@ -133,38 +126,45 @@ class GunAttachment(
             BrokenGun("brokengun", "&4銃が壊れています")
         }
 
-        fun getCursor(ssTool: SSTool): Cursor? {
+        fun getCursor(ssTool: SSTool): ClickType? {
             val id =
                 ssTool.item.getPersistentData(toolPlugin)?.get(gunCursorPersistentKey, PersistentDataType.STRING)
-            return Cursor.values().firstOrNull { it.internalId == id }
+            return ClickType.values().firstOrNull { it.internalId == id }
         }
 
-        fun setCursor(ssTool: SSTool, cursor: Cursor?) {
+        fun setCursor(ssTool: SSTool, clickType: ClickType?) {
             ssTool.item.editPersistentData(toolPlugin) {
-                set(gunCursorPersistentKey, PersistentDataType.STRING, cursor?.internalId)
+                set(gunCursorPersistentKey, PersistentDataType.STRING, clickType?.internalId)
             }
         }
 
-        fun getAttachment(ssTool: SSTool, cursor: Cursor): GunAttachment? {
-            return ssTool.data.attachments[cursor.dependencyAction] as? GunAttachment
+        private fun load(config: CustomConfig, section: String): GunAttachment? {
+            return if (config.contains(section)) {
+                GunAttachment(
+                    config.get("$section.wearout", ConfigDataType.INT, 1, false),
+                    getBulletOption(config, "$section.bullet"),
+                    getShotOption(config, "$section.shot"),
+                    getBaseHitOption(config, "$section.hit", true),
+                    getHeadHitOption(config, "$section.hit.head"),
+                    getCritHitOption(config, "$section.hit.crit"),
+                    getReloadOption(config, "$section.reload"),
+                    getAmmoOption(config, "$section.ammo"),
+                    getRecoilOption(config, "$section.recoil"),
+                    getScopeOption(config, "$section.scope")
+                )
+            } else null
         }
-    }
 
-    object Loader : AttachmentLoader {
-        override fun get(config: CustomConfig, section: String): GunAttachment? {
-            val wearOut = config.get("$section.wearout", ConfigDataType.INT, 1, false)
-            return GunAttachment(
-                wearOut,
-                getBulletOption(config, "$section.bullet"),
-                getShotOption(config, "$section.shot"),
-                getBaseHitOption(config, "$section.hit", true),
-                getHeadHitOption(config, "$section.hit.head"),
-                getCritHitOption(config, "$section.hit.crit"),
-                getReloadOption(config, "$section.reload"),
-                getAmmoOption(config, "$section.ammo"),
-                getRecoilOption(config, "$section.recoil"),
-                getScopeOption(config, "$section.scope")
-            )
+        fun loadAll(config: CustomConfig): Map<ClickType, GunAttachment>? {
+            return if (config.contains("gun")) {
+                mutableMapOf<ClickType, GunAttachment>().also { map ->
+                    ClickType.values().forEach { clickType ->
+                        load(config, "gun.${clickType.internalId}")?.let {
+                            map[clickType] = it
+                        }
+                    }
+                }
+            } else null
         }
     }
 }

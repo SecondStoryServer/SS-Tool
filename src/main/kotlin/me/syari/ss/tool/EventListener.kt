@@ -3,12 +3,10 @@ package me.syari.ss.tool
 import me.syari.ss.core.auto.Event
 import me.syari.ss.core.message.Message.action
 import me.syari.ss.tool.item.SSTool
-import me.syari.ss.tool.item.attachment.ToolAction
+import me.syari.ss.tool.item.attachment.ClickType
 import me.syari.ss.tool.item.attachment.gun.GunAttachment
 import me.syari.ss.tool.item.attachment.gun.option.ReloadOption
 import me.syari.ss.tool.item.attachment.gun.option.ScopeOption
-import me.syari.ss.tool.item.attachment.melee.MeleeAttachment
-import me.syari.ss.tool.item.attachment.shield.ShieldAttachment
 import org.bukkit.entity.LivingEntity
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
@@ -25,46 +23,25 @@ object EventListener : Event {
         e.isCancelled = true
         val player = e.player
         if (ssToolItem.durability < 1) return player.action(GunAttachment.Companion.Message.BrokenGun.message)
-
-        fun useGun(action: ToolAction, cursor: GunAttachment.Cursor) {
-            ssToolItem.runEvent(action) {
-                if (it is GunAttachment) {
-                    val attachmentCursor = GunAttachment.getCursor(ssToolItem)
-                    if (attachmentCursor == cursor) {
-                        val isSuccess = it.shoot(player, cursor, ssToolItem)
-                        if (isSuccess) {
-                            ssToolItem.durability -= it.wearOut
-                            ssToolItem.updateDurability()
-                        }
-                    } else if (player.isSneaking) {
-                        if (attachmentCursor != null) it.scope(player)
-                    } else {
-                        ReloadOption.cancelReload(player)
-                        GunAttachment.setCursor(ssToolItem, cursor)
-                        ssToolItem.updateDisplayName()
-                    }
+        val clickType = ClickType.from(action) ?: return
+        ssToolItem.data.gunAttachments[clickType]?.let {
+            val attachmentCursor = GunAttachment.getCursor(ssToolItem)
+            if (attachmentCursor == clickType) {
+                val isSuccess = it.shoot(player, clickType, ssToolItem)
+                if (isSuccess) {
+                    ssToolItem.durability -= it.wearOut
+                    ssToolItem.updateDurability()
                 }
+            } else if (player.isSneaking) {
+                if (attachmentCursor != null) it.scope(player)
+            } else {
+                ReloadOption.cancelReload(player)
+                GunAttachment.setCursor(ssToolItem, clickType)
+                ssToolItem.updateDisplayName()
             }
         }
+        ssToolItem.data.shieldAttachments[clickType]?.let {
 
-        fun useShield(action: ToolAction) {
-            ssToolItem.runEvent(action) {
-                if (it is ShieldAttachment) {
-
-                }
-            }
-        }
-
-        when (action) {
-            Action.RIGHT_CLICK_BLOCK, Action.RIGHT_CLICK_AIR -> {
-                useGun(ToolAction.ShootRight, GunAttachment.Cursor.Right)
-                useShield(ToolAction.ShieldRight)
-            }
-            Action.LEFT_CLICK_AIR, Action.LEFT_CLICK_BLOCK -> {
-                useGun(ToolAction.ShootLeft, GunAttachment.Cursor.Left)
-                useShield(ToolAction.ShieldLeft)
-            }
-            else -> return
         }
     }
 
@@ -73,7 +50,7 @@ object EventListener : Event {
         val ssToolItem = SSTool.from(e.itemDrop.itemStack) ?: return
         e.isCancelled = true
         val cursor = GunAttachment.getCursor(ssToolItem) ?: return
-        val attachment = GunAttachment.getAttachment(ssToolItem, cursor) ?: return
+        val attachment = ssToolItem.data.gunAttachments[cursor] ?: return
         val player = e.player
         attachment.reload(player, cursor, ssToolItem)
     }
@@ -83,12 +60,10 @@ object EventListener : Event {
         val attacker = e.damager as? Player ?: return
         val victim = e.entity as? LivingEntity ?: return
         val ssToolItem = SSTool.from(attacker.inventory.itemInMainHand) ?: return
-        ssToolItem.runEvent(ToolAction.Melee) {
-            if (it is MeleeAttachment) {
-                it.damage(victim)
-                ssToolItem.durability -= it.wearOut
-                ssToolItem.updateDurability()
-            }
+        ssToolItem.data.meleeAttachment?.let {
+            it.damage(victim)
+            ssToolItem.durability -= it.wearOut
+            ssToolItem.updateDurability()
         }
     }
 

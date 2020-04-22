@@ -10,7 +10,7 @@ import me.syari.ss.core.scheduler.CustomTask
 import me.syari.ss.core.sound.CustomSoundList
 import me.syari.ss.tool.Main.Companion.toolPlugin
 import me.syari.ss.tool.item.SSTool
-import me.syari.ss.tool.item.attachment.gun.GunAttachment
+import me.syari.ss.tool.item.attachment.ClickType
 import org.bukkit.entity.Player
 import org.bukkit.persistence.PersistentDataType
 
@@ -22,14 +22,14 @@ data class ReloadOption(
     val bar: Bar,
     val sound: Sound
 ) {
-    fun reload(player: Player, cursor: GunAttachment.Cursor, ssTool: SSTool) {
-        val lastBullet = getBullet(ssTool, cursor)
+    fun reload(player: Player, clickType: ClickType, ssTool: SSTool) {
+        val lastBullet = getBullet(ssTool, clickType)
         val maxBullet = maxBullet
         if (lastBullet < maxBullet) {
             fun endReload() {
                 var bullet = lastBullet + onceBullet
                 if (maxBullet < bullet) bullet = maxBullet
-                setBullet(ssTool, cursor, bullet)
+                setBullet(ssTool, clickType, bullet)
                 sound.end?.play(player)
                 val endMessage = bar.endMessage
                 if (endMessage.isNotEmpty()) player.action(endMessage)
@@ -60,19 +60,19 @@ data class ReloadOption(
                 }
             }?.let { setReloadTask(player, it) }
         } else if (maxBullet < lastBullet) {
-            setBullet(ssTool, cursor, maxBullet)
+            setBullet(ssTool, clickType, maxBullet)
         }
     }
 
-    fun getBullet(ssTool: SSTool, cursor: GunAttachment.Cursor): Int {
+    fun getBullet(ssTool: SSTool, clickType: ClickType): Int {
         return ssTool.item.getPersistentData(toolPlugin)
-            ?.get(getBulletPersistentKey(cursor), PersistentDataType.INTEGER)
+            ?.get(getBulletPersistentKey(clickType), PersistentDataType.INTEGER)
             ?: maxBullet
     }
 
-    fun setBullet(ssTool: SSTool, cursor: GunAttachment.Cursor, bullet: Int) {
+    fun setBullet(ssTool: SSTool, clickType: ClickType, bullet: Int) {
         ssTool.item.editPersistentData(toolPlugin) {
-            set(getBulletPersistentKey(cursor), PersistentDataType.INTEGER, bullet)
+            set(getBulletPersistentKey(clickType), PersistentDataType.INTEGER, bullet)
         }
         ssTool.updateDisplayName()
     }
@@ -143,8 +143,8 @@ data class ReloadOption(
             )
         }
 
-        fun getBulletPersistentKey(cursor: GunAttachment.Cursor): String {
-            return "ss-tool-gun-bullet-" + cursor.internalId
+        fun getBulletPersistentKey(clickType: ClickType): String {
+            return "ss-tool-gun-bullet-" + clickType.internalId
         }
 
         private val reloadTask = mutableMapOf<UUIDPlayer, CustomTask>()

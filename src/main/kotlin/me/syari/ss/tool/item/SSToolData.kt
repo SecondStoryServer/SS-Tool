@@ -2,8 +2,10 @@ package me.syari.ss.tool.item
 
 import me.syari.ss.core.item.CustomItemStack
 import me.syari.ss.tool.Main.Companion.toolPlugin
-import me.syari.ss.tool.item.attachment.ToolAction
-import me.syari.ss.tool.item.attachment.base.Attachment
+import me.syari.ss.tool.item.attachment.ClickType
+import me.syari.ss.tool.item.attachment.gun.GunAttachment
+import me.syari.ss.tool.item.attachment.melee.MeleeAttachment
+import me.syari.ss.tool.item.attachment.shield.ShieldAttachment
 import org.bukkit.Material
 import org.bukkit.inventory.ItemStack
 import org.bukkit.persistence.PersistentDataType
@@ -14,7 +16,9 @@ class SSToolData(
     val name: String,
     val lore: List<String>,
     val maxDurability: Int,
-    val attachments: Map<ToolAction, Attachment>
+    val gunAttachments: Map<ClickType, GunAttachment>,
+    val meleeAttachment: MeleeAttachment?,
+    val shieldAttachments: Map<ClickType, ShieldAttachment>
 ) {
     fun create() = SSTool(CustomItemStack.create(type, name, lore).apply {
         editPersistentData(toolPlugin) {
@@ -45,9 +49,20 @@ class SSToolData(
             name: String,
             lore: List<String>,
             maxDurability: Int,
-            attachments: Map<ToolAction, Attachment>
+            gunAttachments: Map<ClickType, GunAttachment>?,
+            meleeAttachment: MeleeAttachment?,
+            shieldAttachments: Map<ClickType, ShieldAttachment>?
         ) {
-            toolList[id.toLowerCase()] = SSToolData(id, type, name, lore, maxDurability, attachments)
+            toolList[id.toLowerCase()] = SSToolData(
+                id,
+                type,
+                name,
+                lore,
+                maxDurability,
+                gunAttachments ?: mapOf(),
+                meleeAttachment,
+                shieldAttachments ?: mapOf()
+            )
         }
 
         fun clearAll() {
