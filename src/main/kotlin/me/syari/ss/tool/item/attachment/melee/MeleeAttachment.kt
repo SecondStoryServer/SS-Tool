@@ -1,6 +1,7 @@
 package me.syari.ss.tool.item.attachment.melee
 
 import me.syari.ss.core.config.CustomConfig
+import me.syari.ss.tool.item.attachment.AttachmentLoader.getWearOut
 import org.bukkit.entity.LivingEntity
 
 class MeleeAttachment(
@@ -13,7 +14,9 @@ class MeleeAttachment(
     companion object {
         fun load(config: CustomConfig): MeleeAttachment? {
             return if (config.contains("melee")) {
-                MeleeAttachment(0)
+                MeleeAttachment(
+                    getWearOut(config, "melee")
+                )
             } else null
         }
     }

@@ -5,6 +5,7 @@ import me.syari.ss.core.config.dataType.ConfigDataType
 import me.syari.ss.core.message.Message.action
 import me.syari.ss.tool.Main.Companion.toolPlugin
 import me.syari.ss.tool.item.SSTool
+import me.syari.ss.tool.item.attachment.AttachmentLoader.getWearOut
 import me.syari.ss.tool.item.attachment.ClickType
 import me.syari.ss.tool.item.attachment.gun.option.*
 import me.syari.ss.tool.item.attachment.gun.option.AmmoOption.Companion.getAmmoOption
@@ -141,7 +142,7 @@ class GunAttachment(
         private fun load(config: CustomConfig, section: String): GunAttachment? {
             return if (config.contains(section)) {
                 GunAttachment(
-                    config.get("$section.wearout", ConfigDataType.INT, 1, false),
+                    getWearOut(config, section),
                     getBulletOption(config, "$section.bullet"),
                     getShotOption(config, "$section.shot"),
                     getBaseHitOption(config, "$section.hit", true),

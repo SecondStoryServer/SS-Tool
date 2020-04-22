@@ -1,6 +1,7 @@
 package me.syari.ss.tool.item.attachment.shield
 
 import me.syari.ss.core.config.CustomConfig
+import me.syari.ss.tool.item.attachment.AttachmentLoader.getWearOut
 import me.syari.ss.tool.item.attachment.ClickType
 
 class ShieldAttachment(
@@ -9,7 +10,9 @@ class ShieldAttachment(
     companion object {
         private fun load(config: CustomConfig, section: String): ShieldAttachment? {
             return if (config.contains(section)) {
-                ShieldAttachment(0)
+                ShieldAttachment(
+                    getWearOut(config, section)
+                )
             } else null
         }
 
