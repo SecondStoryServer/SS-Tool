@@ -6,6 +6,8 @@ import me.syari.ss.core.item.ItemStackPlus.giveOrDrop
 import me.syari.ss.tool.Main.Companion.toolPlugin
 import me.syari.ss.tool.item.attachment.ClickAction.Companion.getCursor
 import me.syari.ss.tool.item.attachment.ClickType
+import me.syari.ss.tool.item.module.ModuleType
+import me.syari.ss.tool.item.module.ToolModule
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import org.bukkit.persistence.PersistentDataType
@@ -19,7 +21,7 @@ class SSTool(val item: CustomItemStack, val data: SSToolData) {
 
     private fun updateDurability() {
         item.editPersistentData(toolPlugin) {
-            set(gunDurabilityPersistentKey, PersistentDataType.INTEGER, durability)
+            set(toolDurabilityPersistentKey, PersistentDataType.INTEGER, durability)
         }
         item.damage = item.type.maxDurability - ((durability * item.type.maxDurability) / data.maxDurability)
     }
@@ -51,11 +53,19 @@ class SSTool(val item: CustomItemStack, val data: SSToolData) {
         }
     }
 
+    private val toolModuleMap = mutableMapOf<ModuleType, MutableSet<ToolModule.Data>>()
+
     private fun give(player: Player, orDrop: Boolean) {
         if (orDrop) {
             player.giveOrDrop(item)
         } else {
             player.give(item)
+        }
+    }
+
+    fun resetEnchant() {
+        data.enchant?.let {
+            item.setEnchant(it)
         }
     }
 
@@ -80,10 +90,10 @@ class SSTool(val item: CustomItemStack, val data: SSToolData) {
             return SSToolData.get(id)?.create()
         }
 
-        private const val gunDurabilityPersistentKey = "ss-tool-durability"
+        private const val toolDurabilityPersistentKey = "ss-tool-durability"
 
         fun getDurability(item: CustomItemStack): Int? {
-            return item.getPersistentData(toolPlugin)?.get(gunDurabilityPersistentKey, PersistentDataType.INTEGER)
+            return item.getPersistentData(toolPlugin)?.get(toolDurabilityPersistentKey, PersistentDataType.INTEGER)
         }
     }
 }

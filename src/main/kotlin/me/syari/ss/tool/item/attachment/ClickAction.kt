@@ -14,11 +14,6 @@ interface ClickAction {
 
     fun drop(player: Player, ssTool: SSTool)
 
-    fun switch(player: Player, ssTool: SSTool) {
-        setCursor(ssTool, clickType)
-        ssTool.updateDisplayName()
-    }
-
     companion object {
         private const val cursorPersistentKey = "ss-tool-cursor"
 
@@ -31,6 +26,7 @@ interface ClickAction {
             ssTool.item.editPersistentData(toolPlugin) {
                 set(cursorPersistentKey, PersistentDataType.STRING, clickType?.internalId)
             }
+            ssTool.updateDisplayName()
         }
     }
 }

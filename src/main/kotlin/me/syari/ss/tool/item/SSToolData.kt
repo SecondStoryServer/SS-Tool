@@ -29,10 +29,9 @@ class SSToolData(
         itemFlag?.let {
             addItemFlag(*it.toTypedArray())
         }
-        enchant?.forEach { enchant, level ->
-            addEnchant(enchant, level)
-        }
-    }, this)
+    }, this).apply {
+        resetEnchant()
+    }
 
     companion object {
         private val toolList = mutableMapOf<String, SSToolData>()
@@ -84,5 +83,7 @@ class SSToolData(
         fun getToolId(item: CustomItemStack): String? {
             return item.getPersistentData(toolPlugin)?.get(toolIdPersistentKey, PersistentDataType.STRING)
         }
+
+        private const val toolModulePersistentKey = "ss-tool-module"
     }
 }

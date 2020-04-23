@@ -7,6 +7,7 @@ import me.syari.ss.tool.item.SSTool
 import me.syari.ss.tool.item.attachment.AttachmentLoader.getWearOut
 import me.syari.ss.tool.item.attachment.ClickAction
 import me.syari.ss.tool.item.attachment.ClickAction.Companion.getCursor
+import me.syari.ss.tool.item.attachment.ClickAction.Companion.setCursor
 import me.syari.ss.tool.item.attachment.ClickType
 import me.syari.ss.tool.item.attachment.gun.option.*
 import me.syari.ss.tool.item.attachment.gun.option.AmmoOption.Companion.getAmmoOption
@@ -51,17 +52,13 @@ class GunAttachment(
         } else if (player.isSneaking) {
             if (cursor != null) scope(player)
         } else {
-            switch(player, ssTool)
+            ReloadOption.cancelReload(player)
+            setCursor(ssTool, clickType)
         }
     }
 
     override fun drop(player: Player, ssTool: SSTool) {
         reload(player, ssTool)
-    }
-
-    override fun switch(player: Player, ssTool: SSTool) {
-        ReloadOption.cancelReload(player)
-        super.switch(player, ssTool)
     }
 
     private fun shoot(player: Player, ssTool: SSTool): Boolean {
